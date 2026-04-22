@@ -1,0 +1,35 @@
+{
+  "name": "@wowcut/workers",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "bullmq": "^5.8.0",
+    "ioredis": "^5.4.1",
+    "tsx": "^4.15.0",
+    "zod": "^3.23.8",
+    "dotenv": "^16.4.5",
+    "date-fns": "^3.6.0",
+    "@remotion/bundler": "^4.0.180",
+    "@remotion/renderer": "^4.0.180",
+    "@wowcut/db": "workspace:*",
+    "@wowcut/shared": "workspace:*",
+    "@wowcut/ai": "workspace:*",
+    "@wowcut/storage": "workspace:*",
+    "@wowcut/email": "workspace:*",
+    "@wowcut/queues": "workspace:*",
+    "@wowcut/remotion": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.4.5"
+  }
+}

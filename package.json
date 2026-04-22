@@ -1,0 +1,32 @@
+{
+  "name": "wowcut",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\" --ignore-path .gitignore",
+    "db:generate": "pnpm --filter @wowcut/db exec prisma generate",
+    "db:migrate": "pnpm --filter @wowcut/db exec prisma migrate dev",
+    "db:deploy": "pnpm --filter @wowcut/db exec prisma migrate deploy",
+    "db:push": "pnpm --filter @wowcut/db exec prisma db push",
+    "db:studio": "pnpm --filter @wowcut/db exec prisma studio",
+    "db:seed": "pnpm --filter @wowcut/db exec tsx prisma/seed.ts"
+  },
+  "devDependencies": {
+    "turbo": "^2.1.0",
+    "typescript": "^5.4.5",
+    "prettier": "^3.3.3",
+    "prettier-plugin-tailwindcss": "^0.6.6",
+    "eslint": "^8.57.0",
+    "@types/node": "^20.14.0"
+  }
+}
