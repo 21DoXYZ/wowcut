@@ -1,6 +1,6 @@
 import { schemas } from "@wowcut/shared";
 import { generateStructured, VERTEX_MODELS, type VertexImagePart } from "../vertex";
-import { SCENARIO_SYSTEM_PROMPT } from "./system-prompt";
+import { getScenarioSystemPrompt } from "./system-prompt";
 import { SCENARIO_FEW_SHOTS } from "./few-shots";
 import { BRAND_SCENARIO_RESPONSE_SCHEMA } from "./response-schema";
 
@@ -8,6 +8,7 @@ export interface GenerateScenarioInput {
   intake: schemas.BriefIntake;
   productImages: Array<{ mediaType: "image/jpeg" | "image/png" | "image/webp"; data: string }>;
   referenceImages: Array<{ mediaType: "image/jpeg" | "image/png" | "image/webp"; data: string }>;
+  selectedStyles?: string[];
 }
 
 export interface GenerateScenarioResult {
@@ -53,9 +54,11 @@ ${SCENARIO_FEW_SHOTS}
 
 Now produce the creative direction JSON for THIS brand. Respond with JSON only, strictly matching the schema.`;
 
+  const systemPrompt = getScenarioSystemPrompt(input.selectedStyles);
+
   const result = await generateStructured({
     model: VERTEX_MODELS.reasoning,
-    system: SCENARIO_SYSTEM_PROMPT,
+    system: systemPrompt,
     userText,
     images,
     schema: schemas.BrandScenarioSchema,

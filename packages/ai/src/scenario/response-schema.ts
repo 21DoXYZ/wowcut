@@ -99,6 +99,12 @@ export const BRAND_SCENARIO_RESPONSE_SCHEMA: Record<string, unknown> = {
           minItems: 3,
           maxItems: 3,
         },
+        fashion_campaign: {
+          type: "array",
+          items: SCENE_VARIANT,
+          minItems: 3,
+          maxItems: 3,
+        },
       },
     },
     recommendedMix: {

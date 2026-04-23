@@ -32,6 +32,7 @@ export const BrandScenarioSchema = z.object({
     social_style: z.array(SceneVariantSchema).length(3),
     editorial_hero: z.array(SceneVariantSchema).length(3),
     cgi_concept: z.array(SceneVariantSchema).length(3),
+    fashion_campaign: z.array(SceneVariantSchema).length(3).optional(),
   }),
   recommendedMix: z.object({
     primaryStyle: StylePresetIdEnum,
@@ -42,8 +43,8 @@ export const BrandScenarioSchema = z.object({
 export type BrandScenario = z.infer<typeof BrandScenarioSchema>;
 
 export const MoodboardImageMetaSchema = z.object({
-  index: z.number().int().min(0).max(8),
-  stylePreset: z.enum(["social_style", "editorial_hero", "cgi_concept"]),
+  index: z.number().int().min(0),
+  stylePreset: z.enum(["social_style", "editorial_hero", "cgi_concept", "fashion_campaign"]),
   sceneId: z.string(),
   sceneHeadline: z.string(),
   url: z.string().url(),

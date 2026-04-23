@@ -6,6 +6,7 @@ import { uploadObject, R2Keys } from "@wowcut/storage";
 import { redis } from "./redis";
 import { renderComposition } from "./remotion-render";
 import { mapUnitToComposition } from "./assembly-mapping";
+import type { schemas } from "@wowcut/shared";
 
 export interface AssemblyJobData {
   unitId: string;
@@ -36,6 +37,7 @@ export const assemblyWorker = new Worker<AssemblyJobData>(
         weekKey: unit.weekKey,
         stylePreset: unit.stylePreset,
         chosenGenerationId: { not: null },
+        id: { not: unit.id },
       },
       include: { chosenGeneration: true },
       orderBy: { slotIndex: "asc" },
@@ -45,21 +47,37 @@ export const assemblyWorker = new Worker<AssemblyJobData>(
       .map((s) => s.chosenGeneration?.outputUrl)
       .filter((u): u is string => Boolean(u));
 
-    // Primary image first, then siblings (dedup), max 3
+    // Primary image first, then siblings, max 3
     const primaryUrl = unit.chosenGeneration.outputUrl;
-    const orderedImages = [
-      primaryUrl,
-      ...siblingUrls.filter((u) => u !== primaryUrl),
-    ].slice(0, 3);
+    const orderedImages = [primaryUrl, ...siblingUrls].slice(0, 3);
+
+    // Look up scene headline from scenario for richer caption
+    let sceneHeadline: string | undefined;
+    if (unit.sourcePreviewSceneId && unit.client.brief) {
+      const brief = unit.client.brief as { scenario?: schemas.BrandScenario };
+      const scenario = brief.scenario;
+      if (scenario?.sceneVariantsByStyle) {
+        const styleScenes =
+          scenario.sceneVariantsByStyle[
+            unit.stylePreset as keyof typeof scenario.sceneVariantsByStyle
+          ];
+        const scene = styleScenes?.find((s) => s.id === unit.sourcePreviewSceneId);
+        if (scene) sceneHeadline = scene.headline;
+      }
+    }
+
+    const caption =
+      sceneHeadline ??
+      `${unit.sku.name} · ${unit.stylePreset.replace(/_/g, " ")}`;
 
     const mapping = mapUnitToComposition({
       stylePreset: unit.stylePreset as Parameters<typeof mapUnitToComposition>[0]["stylePreset"],
       format: unit.format as Parameters<typeof mapUnitToComposition>[0]["format"],
       images: orderedImages,
       brandName: unit.client.name,
-      brandColor: unit.client.brandColors[0] ?? "#000000",
+      brandColor: (unit.client.brandColors[0] ?? "#000000"),
       productName: unit.sku.name,
-      caption: `${unit.sku.name} — ${unit.stylePreset.replace(/_/g, " ")}`,
+      caption,
       ctaText: "Shop now",
     });
 

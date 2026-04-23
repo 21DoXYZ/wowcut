@@ -8,7 +8,7 @@ import {
   STYLE_PRESETS,
 } from "@wowcut/ai";
 
-type PreviewStyle = "social_style" | "editorial_hero" | "cgi_concept";
+type PreviewStyle = "social_style" | "editorial_hero" | "cgi_concept" | "fashion_campaign";
 import { prisma } from "@wowcut/db";
 import { uploadObject } from "@wowcut/storage";
 import { redis } from "./redis";
@@ -58,10 +58,16 @@ export const previewWorker = new Worker<PreviewJobData>(
       intake.references.map((r) => fetchAsBase64(r.imageUrl)),
     );
 
+    const selectedStyles: PreviewStyle[] =
+      (intake.selectedStyles as PreviewStyle[] | undefined)?.length
+        ? (intake.selectedStyles as PreviewStyle[])
+        : ["social_style", "editorial_hero", "cgi_concept"];
+
     const scenarioResult = await generateScenario({
       intake,
       productImages,
       referenceImages,
+      selectedStyles,
     });
 
     await prisma.preview.update({
@@ -69,13 +75,16 @@ export const previewWorker = new Worker<PreviewJobData>(
       data: { scenario: scenarioResult.scenario as unknown as object },
     });
 
-    const styles: PreviewStyle[] = ["social_style", "editorial_hero", "cgi_concept"];
+    const styles: PreviewStyle[] = selectedStyles.filter(
+      (s) => scenarioResult.scenario.sceneVariantsByStyle[s as keyof typeof scenarioResult.scenario.sceneVariantsByStyle],
+    );
     const finalImages: schemas.MoodboardImageMeta[] = [];
     let totalCost = scenarioResult.costUsd;
     let globalIndex = 0;
 
     for (const style of styles) {
-      const scenes = scenarioResult.scenario.sceneVariantsByStyle[style];
+      const scenes = scenarioResult.scenario.sceneVariantsByStyle[style as keyof typeof scenarioResult.scenario.sceneVariantsByStyle];
+      if (!scenes) continue;
       const profile = (await loadStyleProfile(style)) as unknown as import("@wowcut/ai").StyleProfile;
 
       for (const scene of scenes) {
