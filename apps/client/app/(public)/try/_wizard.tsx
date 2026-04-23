@@ -20,6 +20,56 @@ interface UploadedImage {
   previewUrl: string;
 }
 
+type StylePreset = "social_style" | "editorial_hero" | "cgi_concept" | "fashion_campaign";
+
+const STYLES: {
+  id: StylePreset;
+  name: string;
+  tag: string;
+  description: string;
+  format: string;
+}[] = [
+  {
+    id: "social_style",
+    name: "Social Reel",
+    tag: "Most popular",
+    description: "Lifestyle energy, authentic movement, platform-native feel.",
+    format: "9:16 vertical",
+  },
+  {
+    id: "editorial_hero",
+    name: "Editorial Hero",
+    tag: "Clean & premium",
+    description: "Studio-precise product focus. Geometry, texture, packaging.",
+    format: "1:1 square",
+  },
+  {
+    id: "cgi_concept",
+    name: "CGI Concept",
+    tag: "Standout",
+    description: "Hyper-real 3D worlds. Impossible scenes, scale hyperbole.",
+    format: "9:16 vertical",
+  },
+  {
+    id: "fashion_campaign",
+    name: "Fashion Campaign",
+    tag: "Premium",
+    description: "Styled scene with model. Brand storytelling through pose and light.",
+    format: "4:5 portrait",
+  },
+];
+
+const PALETTE_PRESETS = [
+  "#0A0A0A",
+  "#7A5A3A",
+  "#D9C7B4",
+  "#F4E7D8",
+  "#E8B4A6",
+  "#9FB7A3",
+  "#2B3A55",
+  "#8A6BE6",
+];
+
 async function uploadFile(file: File): Promise<UploadedImage> {
   const previewUrl = URL.createObjectURL(file);
   const fd = new FormData();
@@ -34,22 +84,12 @@ async function uploadFile(file: File): Promise<UploadedImage> {
   return { ...data, previewUrl };
 }
 
-const PALETTE_PRESETS = [
-  "#0A0A0A",
-  "#7A5A3A",
-  "#D9C7B4",
-  "#F4E7D8",
-  "#E8B4A6",
-  "#9FB7A3",
-  "#2B3A55",
-  "#8A6BE6",
-];
-
 export function TryWizard() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [products, setProducts] = useState<UploadedImage[]>([]);
   const [references, setReferences] = useState<UploadedImage[]>([]);
+  const [selectedStyles, setSelectedStyles] = useState<StylePreset[]>(["social_style", "editorial_hero"]);
   const [brandColor, setBrandColor] = useState<string>("#111111");
   const [brandName, setBrandName] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
@@ -83,6 +123,16 @@ export function TryWizard() {
     }
   }
 
+  function toggleStyle(id: StylePreset) {
+    setSelectedStyles((prev) => {
+      if (prev.includes(id)) {
+        if (prev.length === 1) return prev;
+        return prev.filter((s) => s !== id);
+      }
+      return [...prev, id];
+    });
+  }
+
   async function handleSubmit() {
     setSubmitting(true);
     setError(null);
@@ -100,6 +150,7 @@ export function TryWizard() {
             source: "user_upload" as const,
           })),
           brandColor,
+          selectedStyles,
         },
       });
       router.push(`/try/moodboard/${result.id}`);
@@ -109,19 +160,23 @@ export function TryWizard() {
     }
   }
 
+  const TOTAL_STEPS = 4;
+  const STEP_LABELS = ["Products", "References", "Styles", "Brand color"];
+
   const canContinue =
     (step === 1 && products.length >= 1) ||
-    (step === 2 && references.length >= 3) ||
-    (step === 3 && /^#[0-9A-Fa-f]{6}$/.test(brandColor));
+    (step === 2 && references.length >= 1) ||
+    (step === 3 && selectedStyles.length >= 1) ||
+    (step === 4 && /^#[0-9A-Fa-f]{6}$/.test(brandColor));
 
   return (
     <Card variant="elevated" noPadding className="overflow-hidden">
       <div className="p-6 md:p-8 border-b border-ink/6">
         <div className="flex items-center justify-between mb-4">
-          <MonoLabel size="sm" className="text-ink/55">Step {step} of 3</MonoLabel>
-          <MonoLabel size="sm" className="text-ink/40">{["Products", "References", "Brand color"][step - 1]}</MonoLabel>
+          <MonoLabel size="sm" className="text-ink/55">Step {step} of {TOTAL_STEPS}</MonoLabel>
+          <MonoLabel size="sm" className="text-ink/40">{STEP_LABELS[step - 1]}</MonoLabel>
         </div>
-        <Stepper current={step} total={3} />
+        <Stepper current={step} total={TOTAL_STEPS} />
       </div>
 
       <div className="p-6 md:p-8">
@@ -142,7 +197,7 @@ export function TryWizard() {
                 className="col-span-3"
               />
               {products.length < 3 && (
-                <div className={products.length > 0 ? "col-span-3" : "col-span-3"}>
+                <div className="col-span-3">
                   <UploadZone
                     label={products.length === 0 ? "Drop product photos here" : "Add another"}
                     hint="JPG, PNG or WEBP · up to 10MB each"
@@ -172,7 +227,7 @@ export function TryWizard() {
               Show us the vibe
             </h2>
             <p className="mt-2 text-[15px] fw-340 tracking-[-0.14px] text-ink/70 leading-[1.5] max-w-[52ch]">
-              Drop 3-5 inspiration images — moods, lighting, aesthetics that feel like you.
+              Drop 1-5 inspiration images — moods, lighting, aesthetics that feel like you.
             </p>
 
             <div className="mt-6">
@@ -185,7 +240,7 @@ export function TryWizard() {
               {references.length < 5 && (
                 <UploadZone
                   label={references.length === 0 ? "Drop inspiration images" : "Add another reference"}
-                  hint="3-5 images · the more different, the better we learn your taste"
+                  hint="Up to 5 images · the more different, the better we learn your taste"
                   multiple
                   onFiles={handleReferenceFiles}
                   size="md"
@@ -194,12 +249,64 @@ export function TryWizard() {
             </div>
 
             <p className="mt-4 text-[12px] fw-330 tracking-[-0.14px] text-ink/50">
-              {references.length}/5 added · minimum 3 to continue
+              {references.length}/5 added
             </p>
           </div>
         )}
 
         {step === 3 && (
+          <div>
+            <h2 className="text-[24px] md:text-[28px] fw-540 tracking-[-0.5px] text-ink leading-[1.15]">
+              Pick your content styles
+            </h2>
+            <p className="mt-2 text-[15px] fw-340 tracking-[-0.14px] text-ink/70 leading-[1.5] max-w-[52ch]">
+              Choose one or more. We&rsquo;ll generate your moodboard in every style you pick.
+            </p>
+
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {STYLES.map((style) => {
+                const selected = selectedStyles.includes(style.id);
+                return (
+                  <button
+                    key={style.id}
+                    type="button"
+                    onClick={() => toggleStyle(style.id)}
+                    className={[
+                      "text-left p-4 rounded-xl border-2 transition-all",
+                      selected
+                        ? "border-ink bg-ink/5"
+                        : "border-ink/12 hover:border-ink/30",
+                    ].join(" ")}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-[15px] fw-540 tracking-[-0.2px] text-ink">
+                        {style.name}
+                      </span>
+                      <span className={[
+                        "shrink-0 mt-0.5 text-[10px] fw-540 tracking-[0.4px] uppercase px-2 py-0.5 rounded-full",
+                        selected ? "bg-ink text-paper" : "bg-ink/8 text-ink/55",
+                      ].join(" ")}>
+                        {selected ? "Selected" : style.tag}
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-[13px] fw-330 tracking-[-0.14px] text-ink/65 leading-[1.4]">
+                      {style.description}
+                    </p>
+                    <p className="mt-2 text-[11px] fw-430 tracking-[0.2px] text-ink/40 uppercase">
+                      {style.format}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+
+            <p className="mt-4 text-[12px] fw-330 tracking-[-0.14px] text-ink/50">
+              {selectedStyles.length} style{selectedStyles.length !== 1 ? "s" : ""} selected
+            </p>
+          </div>
+        )}
+
+        {step === 4 && (
           <div>
             <h2 className="text-[24px] md:text-[28px] fw-540 tracking-[-0.5px] text-ink leading-[1.15]">
               Pick your brand color
@@ -258,10 +365,10 @@ export function TryWizard() {
           ) : (
             <span />
           )}
-          {step < 3 ? (
+          {step < TOTAL_STEPS ? (
             <Button
               variant="black"
-              onClick={() => setStep((s) => Math.min(3, s + 1))}
+              onClick={() => setStep((s) => Math.min(TOTAL_STEPS, s + 1))}
               disabled={!canContinue}
             >
               Continue →

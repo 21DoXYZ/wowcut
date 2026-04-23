@@ -20,11 +20,19 @@ export const IntakeReferenceSchema = z.object({
 });
 export type IntakeReference = z.infer<typeof IntakeReferenceSchema>;
 
+export const StylePresetEnum = z.enum([
+  "social_style",
+  "editorial_hero",
+  "cgi_concept",
+  "fashion_campaign",
+]);
+
 export const BriefIntakeSchema = z.object({
   brandName: z.string().min(1).max(80).optional(),
   products: z.array(IntakeProductSchema).min(1).max(3),
-  references: z.array(IntakeReferenceSchema).min(3).max(5),
+  references: z.array(IntakeReferenceSchema).min(1).max(5),
   brandColor: HexColor,
   secondaryColor: HexColor.optional(),
+  selectedStyles: z.array(StylePresetEnum).min(1).max(4).optional(),
 });
 export type BriefIntake = z.infer<typeof BriefIntakeSchema>;
