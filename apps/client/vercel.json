@@ -1,4 +1,5 @@
 {
+  "installCommand": "npm install -g pnpm@10.33.0 && cd ../.. && pnpm install --no-frozen-lockfile",
   "buildCommand": "cd ../.. && pnpm --filter @wowcut/db exec prisma generate && pnpm --filter @wowcut/client build",
   "outputDirectory": ".next",
   "framework": "nextjs"
