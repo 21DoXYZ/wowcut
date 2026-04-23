@@ -48,3 +48,4 @@ apps/remotion/out/
 
 # Deploy
 .vercel/
+.vercel
