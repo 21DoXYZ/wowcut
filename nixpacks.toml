@@ -8,8 +8,7 @@ cmds = ["pnpm install --no-frozen-lockfile"]
 
 [phases.build]
 cmds = [
-  "pnpm --filter @wowcut/db exec prisma generate",
-  "pnpm --filter @wowcut/workers build"
+  "pnpm --filter @wowcut/db exec prisma generate"
 ]
 
 [variables]
