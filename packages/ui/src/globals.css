@@ -82,6 +82,13 @@
     letter-spacing: clamp(-0.9px, -0.02em, -1.84px);
   }
 
+  .landing-display {
+    font-weight: 440;
+    font-size: clamp(40px, 6vw, 78px);
+    line-height: 1.0;
+    letter-spacing: clamp(-0.8px, -0.02em, -1.6px);
+  }
+
   .brand-heading {
     font-weight: 540;
     font-size: clamp(32px, 5vw, 56px);

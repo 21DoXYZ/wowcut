@@ -17,17 +17,21 @@ import { trpc } from "@/lib/trpc";
 interface UploadedImage {
   uploadId: string;
   url: string;
+  previewUrl: string;
 }
 
 async function uploadFile(file: File): Promise<UploadedImage> {
+  const previewUrl = URL.createObjectURL(file);
   const fd = new FormData();
   fd.append("file", file);
   const res = await fetch("/api/upload", { method: "POST", body: fd });
   if (!res.ok) {
+    URL.revokeObjectURL(previewUrl);
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error ?? "Upload failed");
   }
-  return (await res.json()) as UploadedImage;
+  const data = (await res.json()) as { uploadId: string; url: string };
+  return { ...data, previewUrl };
 }
 
 const PALETTE_PRESETS = [
@@ -132,7 +136,7 @@ export function TryWizard() {
 
             <div className="mt-6 grid grid-cols-3 gap-3">
               <UploadPreviewGrid
-                items={products.map((p) => ({ id: p.uploadId, url: p.url }))}
+                items={products.map((p) => ({ id: p.uploadId, url: p.previewUrl }))}
                 onRemove={(id) => setProducts((p) => p.filter((x) => x.uploadId !== id))}
                 columns={3}
                 className="col-span-3"
@@ -173,7 +177,7 @@ export function TryWizard() {
 
             <div className="mt-6">
               <UploadPreviewGrid
-                items={references.map((r) => ({ id: r.uploadId, url: r.url }))}
+                items={references.map((r) => ({ id: r.uploadId, url: r.previewUrl }))}
                 onRemove={(id) => setReferences((r) => r.filter((x) => x.uploadId !== id))}
                 columns={5}
                 className="mb-3"

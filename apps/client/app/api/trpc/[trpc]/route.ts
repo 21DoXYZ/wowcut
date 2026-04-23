@@ -3,7 +3,7 @@ import { clientPortalRouter, createContext } from "@wowcut/api/server";
 import { getCurrentClient } from "@/lib/session";
 
 const handler = async (req: Request) => {
-  const current = await getCurrentClient();
+  const current = await getCurrentClient().catch(() => null);
   return fetchRequestHandler({
     endpoint: "/api/trpc",
     req,

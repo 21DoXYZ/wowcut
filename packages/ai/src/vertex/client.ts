@@ -15,6 +15,7 @@ export function getVertex(): GoogleGenAI {
   cached = new GoogleGenAI({
     apiKey,
     vertexai: true,
+    location: process.env.VERTEX_LOCATION ?? "us-central1",
   });
   return cached;
 }
