@@ -21,6 +21,9 @@ function getClient(): S3Client {
   cachedClient = new S3Client({
     region: "auto",
     endpoint: `https://${ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    // R2 supports both path-style and virtual-hosted; path-style avoids SNI
+    // mismatches on some serverless runtimes.
+    forcePathStyle: true,
     credentials: {
       accessKeyId: process.env.R2_ACCESS_KEY_ID,
       secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
