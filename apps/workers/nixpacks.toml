@@ -1,0 +1,16 @@
+providers = ["node"]
+
+[phases.setup]
+nixPkgs = ["nodejs_22", "pnpm-10_x"]
+
+[phases.install]
+cmds = ["cd ../.. && pnpm install --no-frozen-lockfile"]
+
+[phases.build]
+cmds = [
+  "cd ../.. && pnpm --filter @wowcut/db exec prisma generate",
+  "cd ../.. && pnpm --filter @wowcut/workers build"
+]
+
+[start]
+cmd = "cd ../.. && pnpm --filter @wowcut/workers start"
