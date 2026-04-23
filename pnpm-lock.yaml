@@ -277,7 +277,7 @@ importers:
         version: link:../../packages/queues
       '@wowcut/remotion':
         specifier: workspace:*
-        version: link:../remotion
+        version: link:../../packages/remotion
       '@wowcut/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -425,6 +425,37 @@ importers:
       '@types/node':
         specifier: ^20.14.0
         version: 20.19.39
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+
+  packages/remotion:
+    dependencies:
+      '@remotion/bundler':
+        specifier: ^4.0.180
+        version: 4.0.450(@swc/helpers@0.5.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@remotion/renderer':
+        specifier: ^4.0.180
+        version: 4.0.450(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      remotion:
+        specifier: ^4.0.180
+        version: 4.0.450(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@types/react':
+        specifier: ^18.3.1
+        version: 18.3.28
+      '@types/react-dom':
+        specifier: ^18.3.1
+        version: 18.3.7(@types/react@18.3.28)
       typescript:
         specifier: ^5.4.5
         version: 5.9.3

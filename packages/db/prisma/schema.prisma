@@ -12,39 +12,39 @@ datasource db {
 // PREVIEW (pre-checkout moodboard)
 // =========================
 model Preview {
-  id                String   @id @default(cuid())
-  ipHash            String
+  id     String @id @default(cuid())
+  ipHash String
 
   // Intake data (uploaded by user)
-  intake            Json?    // BriefIntake: products[], references[], brandColor, brandName
+  intake Json? // BriefIntake: products[], references[], brandColor, brandName
 
   // Pipeline artifacts
-  scenario          Json?    // BrandScenario from Claude Opus
-  moodboardImages   Json?    // Array of 9 image metadata: { url, stylePreset, sceneId, qcScore, ... }
+  scenario        Json? // BrandScenario from Claude Opus
+  moodboardImages Json? // Array of 9 image metadata: { url, stylePreset, sceneId, qcScore, ... }
 
-  status            String   @default("intake")  // intake | generating | succeeded | failed
+  status            String   @default("intake") // intake | generating | succeeded | failed
   failureReason     String?
   costUsd           Decimal? @db.Decimal(10, 6)
   convertedClientId String?
 
-  favorites         MoodboardFavorite[]
+  favorites MoodboardFavorite[]
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([ipHash, createdAt])
 }
 
 model MoodboardFavorite {
-  id          String   @id @default(cuid())
-  previewId   String
-  preview     Preview  @relation(fields: [previewId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  previewId String
+  preview   Preview @relation(fields: [previewId], references: [id], onDelete: Cascade)
 
   imageIndex  Int
   stylePreset String
   sceneId     String
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([previewId, imageIndex])
   @@index([previewId])
@@ -54,69 +54,69 @@ model MoodboardFavorite {
 // CLIENTS
 // =========================
 enum ClientStatus {
-  onboarding_confirm       // Paid, waiting for one-click confirm
-  active                   // Production running
-  week_pass_active         // Week Pass trial, 7-day window
-  week_pass_expired        // Trial ended, no upgrade
-  paused                   // Subscription paused (retention)
+  onboarding_confirm // Paid, waiting for one-click confirm
+  active // Production running
+  week_pass_active // Week Pass trial, 7-day window
+  week_pass_expired // Trial ended, no upgrade
+  paused // Subscription paused (retention)
   cancelled
 }
 
 enum Plan {
-  week_pass    // $49 one-time, 7 days, 5 units
-  base         // $250/mo, 20 units
-  base_annual  // $2550/yr, 20 units/mo
-  premium      // $500/mo, 30 units, Fashion
+  week_pass // $49 one-time, 7 days, 5 units
+  base // $250/mo, 20 units
+  base_annual // $2550/yr, 20 units/mo
+  premium // $500/mo, 30 units, Fashion
   premium_annual // $5100/yr, 30 units/mo, Fashion
 }
 
 model Client {
-  id                     String       @id @default(cuid())
-  slug                   String       @unique
-  name                   String
-  email                  String       @unique
-  plan                   Plan         @default(base)
-  status                 ClientStatus @default(onboarding_confirm)
+  id     String       @id @default(cuid())
+  slug   String       @unique
+  name   String
+  email  String       @unique
+  plan   Plan         @default(base)
+  status ClientStatus @default(onboarding_confirm)
 
-  logoUrl                String?
-  brandColors            String[]
-  instagramHandle        String?
+  logoUrl         String?
+  brandColors     String[]
+  instagramHandle String?
 
-  brief                  Json?        // Full brief + intake data carried over
-  toneOfVoice            String?
-  channels               String[]
-  selectedStyles         String[]
+  brief          Json? // Full brief + intake data carried over
+  toneOfVoice    String?
+  channels       String[]
+  selectedStyles String[]
 
-  brandFaceId            String?
+  brandFaceId String?
 
-  stripeCustomerId       String?      @unique
-  stripeSubscriptionId   String?      @unique
+  stripeCustomerId     String? @unique
+  stripeSubscriptionId String? @unique
 
   // Week Pass specifics
-  weekPassExpiresAt      DateTime?
+  weekPassExpiresAt DateTime?
 
   // Pause specifics
-  pausedAt               DateTime?
-  pausedUntil            DateTime?
+  pausedAt    DateTime?
+  pausedUntil DateTime?
 
   // Engagement tracking
-  lastLoginAt            DateTime?
-  weeklyLoginCount       Int          @default(0)
-  healthScore            Int          @default(100)
+  lastLoginAt      DateTime?
+  weeklyLoginCount Int       @default(0)
+  healthScore      Int       @default(100)
 
-  convertedFromPreviewId String?      @unique
+  convertedFromPreviewId String? @unique
 
-  skus                   Sku[]
-  contentPlanItems       ContentPlanItem[]
-  deliveries             Delivery[]
-  briefUpdates           BriefUpdate[]
-  libraryItems           LibraryItem[]
-  insightEntries         InsightEntry[]
-  messages               Message[]
-  trendDropAssignments   TrendDropAssignment[]
+  skus                 Sku[]
+  contentPlanItems     ContentPlanItem[]
+  deliveries           Delivery[]
+  briefUpdates         BriefUpdate[]
+  libraryItems         LibraryItem[]
+  insightEntries       InsightEntry[]
+  messages             Message[]
+  trendDropAssignments TrendDropAssignment[]
 
-  createdAt              DateTime     @default(now())
-  updatedAt              DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([status])
   @@index([email])
@@ -163,23 +163,23 @@ enum SkuMaterial {
 }
 
 model Sku {
-  id               String      @id @default(cuid())
-  clientId         String
-  client           Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
-  name             String
-  category         SkuCategory
-  shape            SkuShape
-  material         SkuMaterial
-  primaryColor     String?
-  imageUrl         String
-  active           Boolean     @default(true)
-  notes            String?
+  name         String
+  category     SkuCategory
+  shape        SkuShape
+  material     SkuMaterial
+  primaryColor String?
+  imageUrl     String
+  active       Boolean     @default(true)
+  notes        String?
 
   contentPlanItems ContentPlanItem[]
 
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([clientId, active])
 }
@@ -214,42 +214,42 @@ enum StylePresetId {
 }
 
 model ContentPlanItem {
-  id                 String        @id @default(cuid())
-  clientId           String
-  client             Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
-  weekKey            String
-  weekIndex          Int
-  slotIndex          Int
+  weekKey   String
+  weekIndex Int
+  slotIndex Int
 
-  skuId              String
-  sku                Sku           @relation(fields: [skuId], references: [id])
+  skuId String
+  sku   Sku    @relation(fields: [skuId], references: [id])
 
-  stylePreset        StylePresetId
-  format             UnitFormat
-  primaryChannel     String
-  aspectRatios       String[]
+  stylePreset    StylePresetId
+  format         UnitFormat
+  primaryChannel String
+  aspectRatios   String[]
 
-  status             UnitStatus    @default(planned)
-  tags               String[]
-  operatorNotes      String?
-  isTrendDrop        Boolean       @default(false)
+  status        UnitStatus @default(planned)
+  tags          String[]
+  operatorNotes String?
+  isTrendDrop   Boolean    @default(false)
 
   // If this unit was derived from a preview favorite
   sourcePreviewSceneId String?
 
-  generations        Generation[]  @relation("UnitGenerations")
-  chosenGenerationId String?       @unique
-  chosenGeneration   Generation?   @relation("ChosenGeneration", fields: [chosenGenerationId], references: [id])
+  generations        Generation[] @relation("UnitGenerations")
+  chosenGenerationId String?      @unique
+  chosenGeneration   Generation?  @relation("ChosenGeneration", fields: [chosenGenerationId], references: [id])
 
-  assemblyJobId      String?
-  deliveryId         String?
-  delivery           Delivery?     @relation(fields: [deliveryId], references: [id])
+  assemblyJobId String?
+  deliveryId    String?
+  delivery      Delivery? @relation(fields: [deliveryId], references: [id])
 
-  libraryItem        LibraryItem?
+  libraryItem LibraryItem?
 
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([clientId, weekKey])
   @@index([status])
@@ -263,12 +263,12 @@ model ContentPlanItem {
 // rename these to gemini_image / imagen_3 / imagen_3_fast / veo_3 / veo_2 and
 // ship a Prisma migration.
 enum GenerationModel {
-  nano_banana_2         // -> gemini-2.5-flash-image-preview
-  nano_banana_2_hq      // -> imagen-3.0-generate-002
-  kling_v2              // -> veo-3.0-generate-001
-  seedance_v2_pro       // -> veo-3.0-generate-001
-  flux_pro              // -> imagen-3.0-fast-generate-001
-  runway_gen3           // -> veo-2.0-generate-001
+  nano_banana_2 // -> gemini-2.5-flash-image-preview
+  nano_banana_2_hq // -> imagen-3.0-generate-002
+  kling_v2 // -> veo-3.0-generate-001
+  seedance_v2_pro // -> veo-3.0-generate-001
+  flux_pro // -> imagen-3.0-fast-generate-001
+  runway_gen3 // -> veo-2.0-generate-001
 }
 
 enum GenerationStatus {
@@ -279,11 +279,11 @@ enum GenerationStatus {
 }
 
 model Generation {
-  id             String           @id @default(cuid())
-  unitId         String?
-  unit           ContentPlanItem? @relation("UnitGenerations", fields: [unitId], references: [id], onDelete: Cascade)
+  id     String           @id @default(cuid())
+  unitId String?
+  unit   ContentPlanItem? @relation("UnitGenerations", fields: [unitId], references: [id], onDelete: Cascade)
 
-  previewId      String?  // If from preview moodboard flow
+  previewId String? // If from preview moodboard flow
 
   model          GenerationModel
   promptCompiled String           @db.Text
@@ -291,13 +291,13 @@ model Generation {
   alternateIndex Int              @default(0)
   status         GenerationStatus @default(queued)
 
-  outputUrl      String?
-  errorMessage   String?
+  outputUrl    String?
+  errorMessage String?
 
   // QC — full metric breakdown
-  qcResult       Json?            // QcResult full report
-  qcVerdict      String?          // pass | fail | borderline
-  qcComposite    Float?           // 0-100
+  qcResult    Json? // QcResult full report
+  qcVerdict   String? // pass | fail | borderline
+  qcComposite Float? // 0-100
 
   // Individual metric scores (denormalized for fast queries)
   qcProductIdentity Float?
@@ -307,24 +307,24 @@ model Generation {
   qcComposition     Float?
   qcReferenceAlign  Float?
 
-  autoApproved      Boolean       @default(false)
+  autoApproved Boolean @default(false)
 
   // Confidence sampling
-  sampledForConfidence Boolean    @default(false)
-  confidenceVerdict    String?    // approve | reject (by operator)
+  sampledForConfidence Boolean   @default(false)
+  confidenceVerdict    String? // approve | reject (by operator)
   confidenceReviewedAt DateTime?
 
-  costUsd        Decimal?         @db.Decimal(10, 6)
-  latencyMs      Int?
+  costUsd   Decimal? @db.Decimal(10, 6)
+  latencyMs Int?
 
   // Veo long-running operation tracking (null for synchronous image gens)
   veoOperationName String?
-  veoPollAttempts  Int            @default(0)
+  veoPollAttempts  Int     @default(0)
 
-  chosenFor      ContentPlanItem? @relation("ChosenGeneration")
+  chosenFor ContentPlanItem? @relation("ChosenGeneration")
 
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([unitId])
   @@index([previewId])
@@ -336,18 +336,18 @@ model Generation {
 // DELIVERY
 // =========================
 model Delivery {
-  id                String            @id @default(cuid())
-  clientId          String
-  client            Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   weekKey           String
   publishingPackUrl String?
   emailSentAt       DateTime?
 
-  items             ContentPlanItem[]
-  retryRequests     RetryRequest[]
+  items         ContentPlanItem[]
+  retryRequests RetryRequest[]
 
-  createdAt         DateTime          @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([clientId, weekKey])
   @@index([clientId])
@@ -380,18 +380,18 @@ model BriefUpdate {
 // LIBRARY
 // =========================
 model LibraryItem {
-  id           String          @id @default(cuid())
-  clientId     String
-  client       Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
-  unitId       String          @unique
-  unit         ContentPlanItem @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  unitId String          @unique
+  unit   ContentPlanItem @relation(fields: [unitId], references: [id], onDelete: Cascade)
 
-  tags         String[]
-  isFavorite   Boolean         @default(false)
-  archiveNote  String?
+  tags        String[]
+  isFavorite  Boolean  @default(false)
+  archiveNote String?
 
-  createdAt    DateTime        @default(now())
+  createdAt DateTime @default(now())
 
   @@index([clientId, isFavorite])
 }
@@ -400,22 +400,22 @@ model LibraryItem {
 // INSIGHTS
 // =========================
 model InsightEntry {
-  id        String    @id @default(cuid())
-  clientId  String
-  client    Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
-  unitId    String?
-  channel   String
-  postedAt  DateTime?
-  likes     Int?
-  saves     Int?
-  comments  Int?
-  shares    Int?
-  views     Int?
-  freeText  String?
+  unitId   String?
+  channel  String
+  postedAt DateTime?
+  likes    Int?
+  saves    Int?
+  comments Int?
+  shares   Int?
+  views    Int?
+  freeText String?
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([clientId, postedAt])
 }
@@ -424,9 +424,9 @@ model InsightEntry {
 // MESSAGES
 // =========================
 model Message {
-  id             String   @id @default(cuid())
-  clientId       String
-  client         Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   sender         String
   senderId       String?
@@ -435,7 +435,7 @@ model Message {
   readByClient   Boolean  @default(false)
   readByOperator Boolean  @default(false)
 
-  createdAt      DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([clientId, createdAt])
 }
@@ -444,8 +444,8 @@ model Message {
 // TREND DROPS
 // =========================
 model TrendDrop {
-  id          String                @id @default(cuid())
-  monthKey    String                @unique
+  id          String @id @default(cuid())
+  monthKey    String @unique
   theme       String
   description String
   presets     Json
@@ -453,7 +453,7 @@ model TrendDrop {
   assignments TrendDropAssignment[]
 
   publishedAt DateTime?
-  createdAt   DateTime              @default(now())
+  createdAt   DateTime  @default(now())
 }
 
 model TrendDropAssignment {
@@ -463,9 +463,9 @@ model TrendDropAssignment {
   clientId    String
   client      Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
-  unitIds     String[]
-  status      String    @default("pending")
-  createdAt   DateTime  @default(now())
+  unitIds   String[]
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
 
   @@unique([trendDropId, clientId])
 }
@@ -486,18 +486,18 @@ model BrandFace {
 // =========================
 // Each week a job looks at operator decisions and proposes new thresholds per style
 model QcCalibrationRun {
-  id              String    @id @default(cuid())
-  stylePreset     String
-  sampleSize      Int
-  currentThreshold Float
+  id                String    @id @default(cuid())
+  stylePreset       String
+  sampleSize        Int
+  currentThreshold  Float
   proposedThreshold Float
   predictedAccuracy Float
-  actualFpRate    Float
-  actualFnRate    Float
-  status          String    @default("pending")  // pending | applied | rejected
-  appliedAt       DateTime?
-  appliedBy       String?
-  createdAt       DateTime  @default(now())
+  actualFpRate      Float
+  actualFnRate      Float
+  status            String    @default("pending") // pending | applied | rejected
+  appliedAt         DateTime?
+  appliedBy         String?
+  createdAt         DateTime  @default(now())
 
   @@index([stylePreset, createdAt])
 }
@@ -517,7 +517,7 @@ model QcStyleProfile {
   faceCountMax         Int      @default(999)
   faceSimilarityMin    Float?
   blurVarianceMin      Float    @default(80)
-  noveltyMin           Float?   // CGI only
+  noveltyMin           Float? // CGI only
   updatedAt            DateTime @updatedAt
 }
 

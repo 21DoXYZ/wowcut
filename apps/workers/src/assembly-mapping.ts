@@ -3,7 +3,8 @@ import type { StylePresetId, UnitFormat } from "@wowcut/ai";
 export interface AssemblyMappingInput {
   stylePreset: StylePresetId;
   format: UnitFormat;
-  imageUrl: string;
+  /** All generated image URLs for this style/unit (montage input) */
+  images: string[];
   brandName: string;
   brandColor: string;
   productName: string;
@@ -19,13 +20,14 @@ export interface AssemblyMappingOutput {
 
 export function mapUnitToComposition(input: AssemblyMappingInput): AssemblyMappingOutput {
   const motion = input.format !== "static";
+  const images = input.images.length > 0 ? input.images : [""];
 
   if (input.stylePreset === "cgi_concept") {
     return {
       compositionId: "CgiReveal",
       kind: motion ? "video" : "still",
       inputProps: {
-        imageUrl: input.imageUrl,
+        imageUrl: images[0],
         productName: input.productName,
       },
     };
@@ -33,10 +35,10 @@ export function mapUnitToComposition(input: AssemblyMappingInput): AssemblyMappi
 
   if (input.stylePreset === "fashion_campaign") {
     return {
-      compositionId: "HeroShot",
+      compositionId: "FashionCampaign",
       kind: motion ? "video" : "still",
       inputProps: {
-        imageUrl: input.imageUrl,
+        images,
         brandName: input.brandName,
         ctaText: input.ctaText,
         brandColor: input.brandColor,
@@ -46,10 +48,10 @@ export function mapUnitToComposition(input: AssemblyMappingInput): AssemblyMappi
 
   if (input.stylePreset === "editorial_hero") {
     return {
-      compositionId: "ProductDemo",
+      compositionId: "EditorialShowcase",
       kind: motion ? "video" : "still",
       inputProps: {
-        imageUrl: input.imageUrl,
+        images,
         productName: input.productName,
         caption: input.caption,
         brandColor: input.brandColor,
@@ -57,13 +59,15 @@ export function mapUnitToComposition(input: AssemblyMappingInput): AssemblyMappi
     };
   }
 
-  // social_style default
+  // social_style
   return {
-    compositionId: "LifestyleCut",
+    compositionId: "SocialReel",
     kind: motion ? "video" : "still",
     inputProps: {
-      imageUrl: input.imageUrl,
-      quote: input.caption || input.productName,
+      images,
+      caption: input.caption || input.productName,
+      brandColor: input.brandColor,
+      brandName: input.brandName,
     },
   };
 }

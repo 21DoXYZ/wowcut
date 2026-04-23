@@ -16,7 +16,11 @@ export const assemblyWorker = new Worker<AssemblyJobData>(
   async (job) => {
     const unit = await prisma.contentPlanItem.findUnique({
       where: { id: job.data.unitId },
-      include: { chosenGeneration: true, client: true, sku: true },
+      include: {
+        chosenGeneration: true,
+        client: true,
+        sku: true,
+      },
     });
     if (!unit || !unit.chosenGeneration?.outputUrl) return;
 
@@ -25,10 +29,33 @@ export const assemblyWorker = new Worker<AssemblyJobData>(
       data: { status: "assembling" },
     });
 
+    // Collect all images for this style + client + week for montage
+    const siblings = await prisma.contentPlanItem.findMany({
+      where: {
+        clientId: unit.clientId,
+        weekKey: unit.weekKey,
+        stylePreset: unit.stylePreset,
+        chosenGenerationId: { not: null },
+      },
+      include: { chosenGeneration: true },
+      orderBy: { slotIndex: "asc" },
+    });
+
+    const siblingUrls = siblings
+      .map((s) => s.chosenGeneration?.outputUrl)
+      .filter((u): u is string => Boolean(u));
+
+    // Primary image first, then siblings (dedup), max 3
+    const primaryUrl = unit.chosenGeneration.outputUrl;
+    const orderedImages = [
+      primaryUrl,
+      ...siblingUrls.filter((u) => u !== primaryUrl),
+    ].slice(0, 3);
+
     const mapping = mapUnitToComposition({
-      stylePreset: unit.stylePreset,
-      format: unit.format,
-      imageUrl: unit.chosenGeneration.outputUrl,
+      stylePreset: unit.stylePreset as Parameters<typeof mapUnitToComposition>[0]["stylePreset"],
+      format: unit.format as Parameters<typeof mapUnitToComposition>[0]["format"],
+      images: orderedImages,
       brandName: unit.client.name,
       brandColor: unit.client.brandColors[0] ?? "#000000",
       productName: unit.sku.name,
@@ -81,4 +108,6 @@ export const assemblyWorker = new Worker<AssemblyJobData>(
   { connection: redis, concurrency: 2 },
 );
 
-assemblyWorker.on("failed", (job, err) => console.error("[assembly] failed", job?.id, err.message));
+assemblyWorker.on("failed", (job, err) =>
+  console.error("[assembly] failed", job?.id, err.message),
+);
