@@ -47,7 +47,7 @@ export async function generateGeminiImage(
     config: {
       numberOfImages: 1,
       aspectRatio,
-      ...(input.seed != null ? { seed: input.seed } : {}),
+      // seed is incompatible with Imagen watermarking (SynthID) — omit
     },
   });
 
