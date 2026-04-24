@@ -1,8 +1,15 @@
+import { z } from "zod";
 import { schemas } from "@wowcut/shared";
 import { generateStructured, VERTEX_MODELS, type VertexImagePart } from "../vertex";
 import { getScenarioSystemPrompt } from "./system-prompt";
 import { SCENARIO_FEW_SHOTS } from "./few-shots";
 import { BRAND_SCENARIO_RESPONSE_SCHEMA } from "./response-schema";
+
+function padToThree<T>(arr: T[]): [T, T, T] {
+  if (arr.length === 0) throw new Error("Scene array is empty");
+  while (arr.length < 3) arr.push(arr[arr.length - 1]);
+  return arr.slice(0, 3) as [T, T, T];
+}
 
 export interface GenerateScenarioInput {
   intake: schemas.BriefIntake;
@@ -61,15 +68,26 @@ Now produce the creative direction JSON for THIS brand. Respond with JSON only, 
     system: systemPrompt,
     userText,
     images,
-    schema: schemas.BrandScenarioSchema,
+    schema: z.unknown(),
     responseSchema: BRAND_SCENARIO_RESPONSE_SCHEMA,
     maxOutputTokens: 8192,
     temperature: 0.75,
   });
 
-  // Cost estimate — cached system + few-shots mostly hit prompt cache; rough
-  // envelope: 4000 input + 1500 output at Gemini 2.5 Pro prices.
+  // Normalize scene arrays to exactly 3 items before strict Zod validation.
+  // Gemini constrained decoding can't enforce minItems so we pad/trim here.
+  const raw = result.data as Record<string, unknown>;
+  const svs = raw.sceneVariantsByStyle as Record<string, unknown[]> | undefined;
+  if (svs) {
+    for (const key of ["social_style", "editorial_hero", "cgi_concept", "fashion_campaign"]) {
+      if (Array.isArray(svs[key]) && svs[key].length > 0) {
+        svs[key] = padToThree(svs[key]);
+      }
+    }
+  }
+
+  const scenario = schemas.BrandScenarioSchema.parse(raw);
   const costUsd = 0.02;
 
-  return { scenario: result.data, rawResponse: result.rawText, costUsd };
+  return { scenario, rawResponse: result.rawText, costUsd };
 }
