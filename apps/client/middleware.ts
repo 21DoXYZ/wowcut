@@ -2,12 +2,17 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey || !supabaseUrl.startsWith("https://")) {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+  try {
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
       cookies: {
         getAll: () => request.cookies.getAll(),
         setAll: (cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) => {
@@ -20,10 +25,12 @@ export async function middleware(request: NextRequest) {
           );
         },
       },
-    },
-  );
+    });
 
-  await supabase.auth.getUser();
+    await supabase.auth.getUser();
+  } catch {
+    // Auth refresh failed — pass through without session
+  }
 
   return supabaseResponse;
 }
