@@ -95,7 +95,7 @@ export const PLAN_LIMITS = {
 } as const;
 
 export const PREVIEW = {
-  ratePerIpPerDay: 3,
+  ratePerIpPerDay: 20,
   cacheTtlSeconds: 60 * 60 * 24,
   timeoutMs: 180_000,
   maxFailuresBeforeGallery: 3,
