@@ -5,13 +5,6 @@ const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  outputFileTracingRoot: path.join(__dirname, "../../"),
-  outputFileTracingIncludes: {
-    "**/*": [
-      "../../node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node",
-      "../../node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/.prisma/client/schema.prisma",
-    ],
-  },
   reactStrictMode: true,
   transpilePackages: [
     "@wowcut/ui",
@@ -23,6 +16,12 @@ const nextConfig = {
     "@wowcut/queues",
   ],
   experimental: {
+    outputFileTracingRoot: path.join(__dirname, "../../"),
+    outputFileTracingIncludes: {
+      "**/*": [
+        "../../node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/.prisma/client/**/*",
+      ],
+    },
     serverComponentsExternalPackages: [
       "@prisma/client",
       ".prisma/client",
