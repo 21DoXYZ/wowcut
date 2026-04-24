@@ -55,27 +55,19 @@ export const BRAND_SCENARIO_RESPONSE_SCHEMA: Record<string, unknown> = {
     moodKeywords: {
       type: "array",
       items: { type: "string" },
-      minItems: 3,
-      maxItems: 8,
     },
     surfaceLibrary: {
       type: "array",
       items: { type: "string" },
-      minItems: 5,
-      maxItems: 12,
     },
     lightingTokens: {
       type: "array",
       items: { type: "string" },
-      minItems: 4,
-      maxItems: 10,
     },
     colorGrading: { type: "string" },
     avoidList: {
       type: "array",
       items: { type: "string" },
-      minItems: 3,
-      maxItems: 12,
     },
     sceneVariantsByStyle: {
       type: "object",
@@ -84,26 +76,18 @@ export const BRAND_SCENARIO_RESPONSE_SCHEMA: Record<string, unknown> = {
         social_style: {
           type: "array",
           items: SCENE_VARIANT,
-          minItems: 3,
-          maxItems: 3,
         },
         editorial_hero: {
           type: "array",
           items: SCENE_VARIANT,
-          minItems: 3,
-          maxItems: 3,
         },
         cgi_concept: {
           type: "array",
           items: SCENE_VARIANT,
-          minItems: 3,
-          maxItems: 3,
         },
         fashion_campaign: {
           type: "array",
           items: SCENE_VARIANT,
-          minItems: 3,
-          maxItems: 3,
         },
       },
     },
