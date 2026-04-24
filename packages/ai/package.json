@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@google/genai": "^1.10.0",
+    "@fal-ai/client": "^1.9.5",
     "zod": "^3.23.8",
     "@wowcut/shared": "workspace:*"
   },
