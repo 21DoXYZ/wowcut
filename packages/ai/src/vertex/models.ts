@@ -5,7 +5,7 @@ export const VERTEX_MODELS = {
   lite: "gemini-2.5-flash-lite",         // captions, retry, scene ranking
 
   // Image
-  imageNative: "gemini-2.0-flash-preview-image-generation", // Nano Banana — multi-image reference
+  imageNative: "imagen-3.0-fast-generate-001", // Imagen 3 Fast — image generation on Vertex Express
   imagenHQ: "imagen-3.0-generate-002",           // Editorial Hero / CGI HQ
   imagenFast: "imagen-3.0-fast-generate-001",    // fallback / cheap path
 

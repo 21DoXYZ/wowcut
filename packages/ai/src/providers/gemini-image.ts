@@ -1,7 +1,8 @@
-import { fal } from "@fal-ai/client";
 import { MODEL_COSTS_USD } from "@wowcut/shared";
 import type { GenerationJob, GenerationResult, Provider } from "./index";
 import type { GenerationModel } from "../prompts/presets";
+import { getVertexImage } from "../vertex/client";
+import { VERTEX_MODELS } from "../vertex/models";
 
 export interface GeminiImageReference {
   mediaType: "image/jpeg" | "image/png" | "image/webp";
@@ -25,46 +26,37 @@ export interface GeminiImageCallResult {
   safetyRatings: unknown;
 }
 
-const FAL_MODEL_MAP: Record<string, string> = {
-  nano_banana_2: "fal-ai/flux/schnell",
-  nano_banana_2_hq: "fal-ai/flux/dev",
-};
-
 export async function generateGeminiImage(
   input: GeminiImageCallInput,
 ): Promise<GeminiImageCallResult> {
+  const ai = getVertexImage();
   const started = Date.now();
 
-  const falModel = FAL_MODEL_MAP[input.model] ?? "fal-ai/flux/schnell";
+  const prompt = input.negative
+    ? `${input.prompt}\n\nAvoid: ${input.negative}`
+    : input.prompt;
 
-  fal.config({ credentials: process.env.FAL_API_KEY });
+  const aspectRatio =
+    input.aspectRatio === "9:16" ? "9:16"
+    : input.aspectRatio === "16:9" ? "16:9"
+    : "1:1";
 
-  const result = await fal.subscribe(falModel, {
-    input: {
-      prompt: input.negative
-        ? `${input.prompt} --no ${input.negative}`
-        : input.prompt,
-      image_size: input.aspectRatio === "9:16" ? "portrait_16_9"
-        : input.aspectRatio === "16:9" ? "landscape_16_9"
-        : "square_hd",
-      num_images: 1,
+  const response = await ai.models.generateImages({
+    model: VERTEX_MODELS.imageNative,
+    prompt,
+    config: {
+      numberOfImages: 1,
+      aspectRatio,
       ...(input.seed != null ? { seed: input.seed } : {}),
     },
   });
 
-  const output = result.data as { images?: Array<{ url: string; content_type?: string }> };
-  const img = output?.images?.[0];
-  if (!img?.url) throw new Error("FAL returned no image");
-
-  // Fetch image and convert to base64
-  const imgRes = await fetch(img.url);
-  const arrayBuffer = await imgRes.arrayBuffer();
-  const imageBase64 = Buffer.from(arrayBuffer).toString("base64");
-  const mimeType = (img.content_type ?? imgRes.headers.get("content-type") ?? "image/jpeg") as string;
+  const img = response.generatedImages?.[0];
+  if (!img?.image?.imageBytes) throw new Error("Imagen returned no image");
 
   return {
-    imageBase64,
-    mimeType,
+    imageBase64: img.image.imageBytes,
+    mimeType: "image/png",
     latencyMs: Date.now() - started,
     costUsd: (MODEL_COSTS_USD as Record<string, number>)[input.model] ?? 0.04,
     safetyRatings: [],
