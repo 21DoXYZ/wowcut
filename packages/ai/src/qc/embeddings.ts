@@ -1,6 +1,3 @@
-import { getVertex } from "../vertex/client";
-import { VERTEX_MODELS } from "../vertex/models";
-
 type MediaType = "image/jpeg" | "image/png" | "image/webp";
 
 export interface EmbedImageInput {
@@ -10,29 +7,12 @@ export interface EmbedImageInput {
 }
 
 /**
- * Call Vertex multimodalembedding@001 with an image (and optionally text).
- * Returns the 1408-dim image embedding. Returns empty array on error.
+ * Multimodal embeddings are disabled — multimodalembedding@001 requires the
+ * Vertex AI Predict API which is not exposed by the @google/genai SDK.
+ * QC ranking falls back to prompt-match score only.
  */
-export async function embedImage(input: EmbedImageInput): Promise<number[]> {
-  const ai = getVertex();
-  try {
-    const instances: Array<Record<string, unknown>> = [];
-    const image: Record<string, unknown> = {};
-    if (input.base64) image.bytesBase64Encoded = input.base64;
-    if (input.url) image.gcsUri = input.url;
-    instances.push({ image });
-
-    const response = await ai.models.embedContent({
-      model: VERTEX_MODELS.multimodalEmbedding,
-      contents: instances as never,
-    });
-
-    const first = response.embeddings?.[0];
-    return first?.values ?? [];
-  } catch (err) {
-    console.error("[embeddings] failed", (err as Error).message);
-    return [];
-  }
+export async function embedImage(_input: EmbedImageInput): Promise<number[]> {
+  return [];
 }
 
 export function cosineSimilarity(a: number[], b: number[]): number {
