@@ -11,6 +11,7 @@ export interface CurrentClientSession {
 
 export async function getCurrentClient(): Promise<CurrentClientSession | null> {
   const supabase = supabaseServerClient();
+  if (!supabase) return null;
   const {
     data: { user },
   } = await supabase.auth.getUser();
