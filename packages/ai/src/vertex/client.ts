@@ -12,10 +12,10 @@ export function getVertex(): GoogleGenAI {
   if (!apiKey) {
     throw new Error("VERTEX_API_KEY is not configured");
   }
+  // Vertex Express Mode: apiKey auth, no project/location allowed.
   cached = new GoogleGenAI({
     apiKey,
     vertexai: true,
-    location: process.env.VERTEX_LOCATION ?? "us-central1",
   });
   return cached;
 }
