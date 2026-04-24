@@ -79,9 +79,20 @@ Now produce the creative direction JSON for THIS brand. Respond with JSON only, 
   const raw = result.data as Record<string, unknown>;
   const svs = raw.sceneVariantsByStyle as Record<string, unknown[]> | undefined;
   if (svs) {
-    for (const key of ["social_style", "editorial_hero", "cgi_concept", "fashion_campaign"]) {
+    const STYLES = ["social_style", "editorial_hero", "cgi_concept", "fashion_campaign"];
+    // First pass: pad styles that have at least 1 scene
+    for (const key of STYLES) {
       if (Array.isArray(svs[key]) && svs[key].length > 0) {
         svs[key] = padToThree(svs[key]);
+      }
+    }
+    // Second pass: fill missing required styles from social_style or first available
+    const fallback = (svs.social_style ?? svs.editorial_hero ?? svs.cgi_concept) as unknown[];
+    for (const key of ["social_style", "editorial_hero", "cgi_concept"]) {
+      if (!Array.isArray(svs[key]) || svs[key].length === 0) {
+        if (fallback && fallback.length > 0) {
+          svs[key] = padToThree([...fallback]);
+        }
       }
     }
   }
