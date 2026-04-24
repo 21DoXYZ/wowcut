@@ -3,8 +3,8 @@ import { GoogleGenAI } from "@google/genai";
 let cached: GoogleGenAI | null = null;
 
 /**
- * Returns a cached GoogleGenAI client configured for Vertex AI Express Mode.
- * Auth is API-key based — works against https://aiplatform.googleapis.com.
+ * Returns a cached GoogleGenAI client using Gemini Developer API (API key).
+ * Works with any key from Google AI Studio or GCP that has Gemini access.
  */
 export function getVertex(): GoogleGenAI {
   if (cached) return cached;
@@ -12,11 +12,7 @@ export function getVertex(): GoogleGenAI {
   if (!apiKey) {
     throw new Error("VERTEX_API_KEY is not configured");
   }
-  // Vertex Express Mode: apiKey auth, no project/location allowed.
-  cached = new GoogleGenAI({
-    apiKey,
-    vertexai: true,
-  });
+  cached = new GoogleGenAI({ apiKey });
   return cached;
 }
 
