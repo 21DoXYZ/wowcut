@@ -22,6 +22,12 @@ const nextConfig = {
       "@react-email/components",
       "react-email",
     ],
+    outputFileTracingIncludes: {
+      "**": [
+        "../../node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node",
+        "../../node_modules/.pnpm/prisma@5.22.0/node_modules/prisma/libquery_engine-rhel-openssl-3.0.x.so.node",
+      ],
+    },
   },
   images: {
     remotePatterns: [
