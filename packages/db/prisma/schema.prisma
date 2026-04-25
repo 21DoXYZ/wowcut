@@ -536,3 +536,89 @@ model AuditLog {
   @@index([entity])
   @@index([createdAt])
 }
+
+// =========================
+// AICON — VIDEO CONTENT FARM
+// =========================
+
+enum VideoDuration {
+  s15  // 15 seconds
+  s30  // 30 seconds
+  s60  // 60 seconds
+}
+
+enum VideoProjectStatus {
+  draft        // topic entered, no script yet
+  scripted     // script generated, awaiting storyboard
+  generating   // generating scene images
+  reviewing    // images ready, user reviewing
+  animating    // approved scenes being animated via Veo
+  assembling   // all clips assembled via Remotion
+  done         // final video ready
+  failed
+}
+
+enum SceneStatus {
+  pending
+  generating
+  done
+  failed
+}
+
+model VideoProject {
+  id       String             @id @default(cuid())
+  topic    String             // short user input, e.g. "dog grooming timelapse"
+  duration VideoDuration      @default(s30)
+  status   VideoProjectStatus @default(draft)
+
+  script Json? // { hook: string, scenes: [{ index, title, action, voiceover, duration }] }
+
+  finalVideoUrl String?
+  costUsd       Decimal? @db.Decimal(10, 6)
+
+  scenes VideoScene[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model VideoScene {
+  id        String       @id @default(cuid())
+  projectId String
+  project   VideoProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  index     Int    // scene order (0-based)
+  title     String // short scene title
+  action    String // what happens visually
+  voiceover String? // text overlay or narration
+  durationS Int    // seconds allocated to this scene
+
+  // Storyboard — visual direction
+  shotType          String? // close_up | wide | medium | overhead | pov | tracking
+  visualDescription String? // full visual description for prompt
+  imagePrompt       String? // assembled Imagen 3 prompt
+  negativePrompt    String? // negative prompt for image generation
+
+  // Keyframe image (Imagen 3)
+  imageUrl    String?
+  imageStatus SceneStatus @default(pending)
+
+  // Animation clip (Veo image-to-video)
+  videoUrl         String?
+  videoStatus      SceneStatus @default(pending)
+  veoOperationName String?
+  veoPollAttempts  Int         @default(0)
+
+  // User approval
+  approved Boolean @default(false)
+  feedback String? // user revision comment
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, index])
+  @@index([videoStatus])
+}

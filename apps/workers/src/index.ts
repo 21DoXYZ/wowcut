@@ -8,6 +8,8 @@ import { assemblyWorker } from "./assembly.worker";
 import { deliveryWorker, scheduleWeeklyDelivery } from "./delivery.worker";
 import { trendWorker, scheduleMonthlyTrend } from "./trend.worker";
 import { veoPollWorker } from "./veo-poll.worker";
+import { aiconSceneWorker } from "./aicon-scene.worker";
+import { aiconAnimateWorker } from "./aicon-animate.worker";
 import {
   deliveryQueue,
   trendQueue,
@@ -55,6 +57,8 @@ async function main() {
     ["trend", trendWorker],
     ["week-pass-expiry", weekPassExpiryWorker],
     ["veo-poll", veoPollWorker],
+    ["aicon-scene", aiconSceneWorker],
+    ["aicon-animate", aiconAnimateWorker],
   ] as const;
 
   await Promise.all(

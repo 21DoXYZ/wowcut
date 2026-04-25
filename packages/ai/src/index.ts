@@ -8,3 +8,4 @@ export * from "./captions";
 export * from "./scenario";
 export * from "./vertex";
 export * from "./infer-product";
+export * from "./script";
