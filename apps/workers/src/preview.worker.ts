@@ -150,6 +150,7 @@ export const previewWorker = new Worker<PreviewJobData>(
                 prompt: assembled.prompt,
                 negative: assembled.negative,
                 params: { seed: assembled.seed },
+                referenceImages: [],
               },
               format: "static",
               aspectRatio: assembled.aspectRatio,

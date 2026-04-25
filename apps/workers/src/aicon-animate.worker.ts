@@ -11,9 +11,7 @@ import { Worker } from "bullmq";
 import { prisma } from "@wowcut/db";
 import { startVeoJob } from "@wowcut/ai";
 import { redis } from "./redis";
-import { Queue } from "bullmq";
-
-const veoPollQueue = new Queue("veo-poll", { connection: redis });
+import { enqueueVeoPoll } from "@wowcut/queues";
 
 export interface AiconAnimateJobData {
   sceneId: string;
@@ -61,18 +59,8 @@ export const aiconAnimateWorker = new Worker<AiconAnimateJobData>(
       data: { veoOperationName: op.operationName },
     });
 
-    // Queue veo polling — reuses existing veo-poll worker
-    // We use sceneId as the generationId equivalent (custom handling via metadata)
-    await veoPollQueue.add(
-      `aicon-veo-${scene.id}`,
-      {
-        generationId: scene.id,   // we'll intercept this in poll worker
-        operationName: op.operationName,
-        attempt: 1,
-        isAiconScene: true,       // flag so veo-poll worker routes correctly
-      },
-      { delay: 15_000, attempts: 1, removeOnComplete: true },
-    );
+    // Queue veo polling via the shared helper so the aicon branch is honoured.
+    await enqueueVeoPoll(scene.id, op.operationName, 1, { isAiconScene: true });
 
     console.log(`[aicon-animate] ✓ Veo started for scene ${scene.index}`);
   },

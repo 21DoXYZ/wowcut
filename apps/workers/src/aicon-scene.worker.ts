@@ -51,6 +51,7 @@ export const aiconSceneWorker = new Worker<AiconSceneJobData>(
         prompt: scene.imagePrompt,
         negative: scene.negativePrompt ?? "blurry, low quality, text, watermark, cartoon, anime",
         params: {},
+        referenceImages: [],
       },
       format: "static",
       aspectRatio: "9:16",
@@ -66,6 +67,14 @@ export const aiconSceneWorker = new Worker<AiconSceneJobData>(
       data: { imageUrl, imageStatus: "done" },
     });
 
+    // Cost: nano_banana_2 / Imagen-3 Fast ≈ $0.039 per image.
+    await prisma.videoProject
+      .update({
+        where: { id: scene.projectId },
+        data: { costUsd: { increment: 0.039 } },
+      })
+      .catch(() => {});
+
     // Check if all scenes in project are done → update project status
     const project = scene.project;
     const allScenes = await prisma.videoScene.findMany({
@@ -74,11 +83,15 @@ export const aiconSceneWorker = new Worker<AiconSceneJobData>(
     });
     const allDone = allScenes.every((s) => s.imageStatus === "done");
     if (allDone) {
-      await prisma.videoProject.update({
-        where: { id: project.id },
+      // Idempotent flip — concurrent scene workers all see allDone, but only
+      // the first one wins the updateMany (status moves from "generating").
+      const flipped = await prisma.videoProject.updateMany({
+        where: { id: project.id, status: "generating" },
         data: { status: "reviewing" },
       });
-      console.log(`[aicon] project ${project.id} ready for review`);
+      if (flipped.count > 0) {
+        console.log(`[aicon] project ${project.id} ready for review`);
+      }
     }
 
     console.log(`[aicon-scene] ✓ scene ${scene.index} of project ${project.id}`);

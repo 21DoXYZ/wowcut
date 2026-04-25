@@ -151,6 +151,11 @@ export const QUEUE_NAMES = {
   onboardingCleanup: "onboarding-cleanup",
   weekPassExpiry: "week-pass-expiry",
   veoPoll: "veo-poll",
+  // aicon (content-farm app) queues
+  aiconBootstrap: "aicon-bootstrap",
+  aiconScene: "aicon-scene",
+  aiconAnimate: "aicon-animate",
+  aiconAssembly: "aicon-assembly",
 } as const;
 
 // All costs in USD. Enum values map to Vertex AI models:
