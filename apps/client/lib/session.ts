@@ -12,7 +12,7 @@ export interface CurrentClientSession {
 export async function getCurrentClient(): Promise<CurrentClientSession | null> {
   // Dev bypass — set BYPASS_AUTH=true to skip all auth checks.
   // clientId matches the record seeded by scripts/seed-db-only.ts
-  if (process.env.BYPASS_AUTH === "true") {
+  if (process.env.NEXT_PUBLIC_BYPASS_AUTH === "true") {
     return {
       email: "test@wowcut.ai",
       clientId: "cmoe9rrg80004o8c3miafii5p",
