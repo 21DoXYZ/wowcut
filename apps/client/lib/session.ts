@@ -10,6 +10,17 @@ export interface CurrentClientSession {
 }
 
 export async function getCurrentClient(): Promise<CurrentClientSession | null> {
+  // Dev bypass — set BYPASS_AUTH=true on Vercel to skip auth for testing
+  if (process.env.BYPASS_AUTH === "true") {
+    return {
+      email: "dev@wowcut.ai",
+      clientId: "dev",
+      brandName: "Dev Brand",
+      slug: "dev",
+      status: "active",
+    };
+  }
+
   const supabase = supabaseServerClient();
   if (!supabase) return null;
   const {
