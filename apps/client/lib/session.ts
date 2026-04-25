@@ -10,15 +10,21 @@ export interface CurrentClientSession {
 }
 
 export async function getCurrentClient(): Promise<CurrentClientSession | null> {
-  // Dev bypass — set BYPASS_AUTH=true on Vercel to skip auth for testing
+  // Dev bypass — set BYPASS_AUTH=true on Vercel to skip auth for testing.
+  // Uses the real DB client record seeded by scripts/seed-db-only.ts
   if (process.env.BYPASS_AUTH === "true") {
-    return {
-      email: "dev@wowcut.ai",
-      clientId: "dev",
-      brandName: "Dev Brand",
-      slug: "dev",
-      status: "active",
-    };
+    try {
+      const devClient = await prisma.client.findUnique({ where: { email: "test@wowcut.ai" } });
+      if (devClient) {
+        return {
+          email: devClient.email,
+          clientId: devClient.id,
+          brandName: devClient.name,
+          slug: devClient.slug,
+          status: devClient.status,
+        };
+      }
+    } catch { /* fall through to normal auth */ }
   }
 
   const supabase = supabaseServerClient();
