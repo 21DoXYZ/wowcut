@@ -21,7 +21,7 @@ model Preview {
 
   // Pipeline artifacts
   scenario        Json? // BrandScenario from Claude Opus
-  moodboardImages Json? // Array of 9 image metadata: { url, stylePreset, sceneId, qcScore, ... }
+  moodboardImages Json? // Array of 9 image metadata: { url, stylePreset, sceneId, qcScore, videoUrl?, ... }
 
   status            String   @default("intake") // intake | generating | succeeded | failed
   failureReason     String?

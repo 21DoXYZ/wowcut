@@ -13,6 +13,7 @@ interface MoodboardImage {
   url: string;
   seed: number;
   qcComposite: number;
+  videoUrl?: string; // Remotion-rendered reel, present on first image of each style
 }
 
 const STYLE_LABELS: Record<string, { title: string; tag: string }> = {
@@ -162,6 +163,7 @@ export function MoodboardView({ previewId }: { previewId: string }) {
         {(["social_style", "editorial_hero", "cgi_concept"] as const).map((style) => {
           const row = grouped[style] ?? [];
           const meta = STYLE_LABELS[style]!;
+          const videoUrl = row.find((img) => img.videoUrl)?.videoUrl;
           return (
             <div key={style}>
               <div className="mb-4 flex items-center gap-3">
@@ -169,6 +171,30 @@ export function MoodboardView({ previewId }: { previewId: string }) {
                 <Badge tone="outline" size="sm">{meta.tag}</Badge>
                 <div className="h-px bg-ink/10 flex-1" />
               </div>
+
+              {/* Video reel */}
+              {videoUrl && (
+                <div className="mb-4 rounded-[12px] overflow-hidden border border-ink/10 bg-ink/4">
+                  <video
+                    src={videoUrl}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full max-h-[340px] object-cover"
+                  />
+                  <div className="px-4 py-2 flex items-center gap-2">
+                    <span className="text-[11px] fw-430 tracking-[0.3px] uppercase text-ink/40">
+                      Video reel
+                    </span>
+                    <span className="text-[11px] text-ink/30">·</span>
+                    <span className="text-[11px] fw-330 text-ink/40">
+                      Assembled from your 3 scenes
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-3">
                 {row.map((img) => {
                   const faved = favoriteSet.has(img.index);

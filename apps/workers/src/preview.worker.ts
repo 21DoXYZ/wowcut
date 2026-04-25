@@ -1,9 +1,10 @@
+import fs from "node:fs/promises";
 import { Worker } from "bullmq";
 import { QUEUE_NAMES, PREVIEW, type schemas } from "@wowcut/shared";
 import {
   generateScenario,
   assembleMoodboardPrompt,
-  generateGeminiImage,
+  routeProvider,
   inferProductFromImage,
   runQc,
   STYLE_PRESETS,
@@ -13,6 +14,12 @@ type PreviewStyle = "social_style" | "editorial_hero" | "cgi_concept" | "fashion
 import { prisma } from "@wowcut/db";
 import { uploadObject } from "@wowcut/storage";
 import { redis } from "./redis";
+import { renderComposition } from "./remotion-render";
+import { mapUnitToComposition } from "./assembly-mapping";
+
+// The model used for preview image generation.
+// Change this constant to swap providers without touching business logic.
+const PREVIEW_IMAGE_MODEL = "nano_banana_2" as const;
 
 export interface PreviewJobData {
   previewId: string;
@@ -41,6 +48,16 @@ async function loadStyleProfile(stylePreset: string) {
   return profile;
 }
 
+/**
+ * Extract base64 and mimeType from a data URL returned by provider.generate().
+ * e.g. "data:image/png;base64,AAAA..." → { base64: "AAAA...", mimeType: "image/png" }
+ */
+function parseDataUrl(dataUrl: string): { base64: string; mimeType: string } {
+  const [meta, base64] = dataUrl.split(";base64,");
+  const mimeType = (meta ?? "data:image/png").replace("data:", "");
+  return { base64: base64 ?? "", mimeType };
+}
+
 export const previewWorker = new Worker<PreviewJobData>(
   QUEUE_NAMES.preview,
   async (job) => {
@@ -54,21 +71,22 @@ export const previewWorker = new Worker<PreviewJobData>(
       data: { status: "generating" },
     });
 
+    // ── 1. Fetch uploaded images ──────────────────────────────────────────────
     const productImages = await Promise.all(intake.products.map((p) => fetchAsBase64(p.imageUrl)));
     const referenceImages = await Promise.all(
       intake.references.map((r) => fetchAsBase64(r.imageUrl)),
     );
 
-    // Infer product attributes from the first product image using Gemini Vision.
-    // This gives us a concrete product description for the image generation prompt.
+    // ── 2. Infer product from image (provider-agnostic via Gemini Flash Vision) ──
     const productInference = productImages[0]
       ? await inferProductFromImage(productImages[0])
       : undefined;
 
     if (productInference) {
-      console.log(`[preview] product inferred: ${productInference.nameGuess} (${productInference.category})`);
+      console.log(`[preview] product: ${productInference.nameGuess} (${productInference.category})`);
     }
 
+    // ── 3. Generate scenario (Gemini 2.5 Pro sees product + reference images) ──
     const selectedStyles: PreviewStyle[] =
       (intake.selectedStyles as PreviewStyle[] | undefined)?.length
         ? (intake.selectedStyles as PreviewStyle[])
@@ -86,21 +104,29 @@ export const previewWorker = new Worker<PreviewJobData>(
       data: { scenario: scenarioResult.scenario as unknown as object },
     });
 
+    // ── 4. Generate images via provider router ────────────────────────────────
+    const provider = routeProvider(PREVIEW_IMAGE_MODEL);
     const styles: PreviewStyle[] = selectedStyles.filter(
       (s) => scenarioResult.scenario.sceneVariantsByStyle[s as keyof typeof scenarioResult.scenario.sceneVariantsByStyle],
     );
-    const finalImages: schemas.MoodboardImageMeta[] = [];
+    const finalImages: (schemas.MoodboardImageMeta & { videoUrl?: string })[] = [];
     let totalCost = scenarioResult.costUsd;
     let globalIndex = 0;
 
     for (const style of styles) {
-      const scenes = scenarioResult.scenario.sceneVariantsByStyle[style as keyof typeof scenarioResult.scenario.sceneVariantsByStyle];
+      const scenes = scenarioResult.scenario.sceneVariantsByStyle[
+        style as keyof typeof scenarioResult.scenario.sceneVariantsByStyle
+      ];
       if (!scenes) continue;
+
       const profile = (await loadStyleProfile(style)) as unknown as import("@wowcut/ai").StyleProfile;
+      const styleImageUrls: string[] = [];
 
       for (const scene of scenes) {
         const candidates: {
           url: string;
+          base64: string;
+          mimeType: string;
           seed: number;
           qcComposite: number;
           costUsd: number;
@@ -117,36 +143,33 @@ export const previewWorker = new Worker<PreviewJobData>(
           });
 
           try {
-            const result = await generateGeminiImage({
-              model: "nano_banana_2",
-              prompt: assembled.prompt,
-              negative: assembled.negative,
-              references:
-                productImages.length && referenceImages.length
-                  ? [
-                      productImages[0]!,
-                      referenceImages[Math.min(seedIdx, referenceImages.length - 1)]!,
-                    ]
-                  : productImages,
+            // ── Provider-agnostic generation ──
+            const genResult = await provider.generate({
+              model: PREVIEW_IMAGE_MODEL,
+              compiled: {
+                prompt: assembled.prompt,
+                negative: assembled.negative,
+                params: { seed: assembled.seed },
+              },
+              format: "static",
               aspectRatio: assembled.aspectRatio,
-              seed: assembled.seed,
             });
 
+            const { base64, mimeType } = parseDataUrl(genResult.outputUrl);
             const candidateKey = `previews/${preview.id}/scene-${scene.id}-seed${seedIdx}.jpg`;
-            const buffer = Buffer.from(result.imageBase64, "base64");
+            const buffer = Buffer.from(base64, "base64");
             const url = await uploadObject({
               key: candidateKey,
               body: buffer,
-              contentType: result.mimeType,
+              contentType: mimeType,
             });
 
             const preset = STYLE_PRESETS[style];
             const mediaType: "image/jpeg" | "image/png" | "image/webp" =
-              result.mimeType.includes("png")
-                ? "image/png"
-                : result.mimeType.includes("webp")
-                  ? "image/webp"
-                  : "image/jpeg";
+              mimeType.includes("png") ? "image/png"
+              : mimeType.includes("webp") ? "image/webp"
+              : "image/jpeg";
+
             const qc = await runQc({
               preset,
               profile,
@@ -155,17 +178,19 @@ export const previewWorker = new Worker<PreviewJobData>(
               referenceImageUrls: intake.references.map((r) => r.imageUrl),
               brandColorsHex: [intake.brandColor, intake.secondaryColor].filter(Boolean) as string[],
               prompt: assembled.prompt,
-              generatedImageBase64: result.imageBase64,
+              generatedImageBase64: base64,
               generatedImageMediaType: mediaType,
             });
 
             candidates.push({
               url,
+              base64,
+              mimeType,
               seed: assembled.seed,
               qcComposite: qc.composite,
-              costUsd: result.costUsd + 0.015,
+              costUsd: genResult.costUsd,
             });
-            totalCost += result.costUsd + 0.015;
+            totalCost += genResult.costUsd;
           } catch (err) {
             console.error(`[preview] scene ${scene.id} seed ${seedIdx} failed`, err);
           }
@@ -177,6 +202,7 @@ export const previewWorker = new Worker<PreviewJobData>(
 
         candidates.sort((a, b) => b.qcComposite - a.qcComposite);
         const winner = candidates[0]!;
+        styleImageUrls.push(winner.url);
 
         finalImages.push({
           index: globalIndex,
@@ -190,6 +216,43 @@ export const previewWorker = new Worker<PreviewJobData>(
         });
         globalIndex++;
       }
+
+      // ── 5. Assemble video reel for this style using Remotion ────────────────
+      try {
+        const mapping = mapUnitToComposition({
+          stylePreset: style as Parameters<typeof mapUnitToComposition>[0]["stylePreset"],
+          format: "short_motion",
+          images: styleImageUrls,
+          brandName: intake.brandName ?? "Brand",
+          brandColor: intake.brandColor,
+          productName: productInference?.nameGuess ?? intake.products[0]?.nameGuess ?? "Product",
+          caption: scenarioResult.scenario.moodKeywords.slice(0, 3).join(" · "),
+          ctaText: "Shop now",
+        });
+
+        const render = await renderComposition({
+          compositionId: mapping.compositionId,
+          inputProps: mapping.inputProps,
+          kind: "video",
+          outputKey: `previews/${preview.id}/reel-${style}.mp4`,
+        });
+
+        const videoBody = await fs.readFile(render.filePath);
+        const videoUrl = await uploadObject({
+          key: `previews/${preview.id}/reel-${style}.mp4`,
+          body: videoBody,
+          contentType: "video/mp4",
+        });
+        await fs.unlink(render.filePath).catch(() => {});
+
+        // Attach videoUrl to the first image of this style so the client can find it
+        const firstStyleImg = finalImages.find((img) => img.stylePreset === style);
+        if (firstStyleImg) (firstStyleImg as Record<string, unknown>).videoUrl = videoUrl;
+
+        console.log(`[preview] reel ready for ${style}: ${videoUrl}`);
+      } catch (err) {
+        console.error(`[preview] reel failed for ${style} (non-fatal):`, (err as Error).message);
+      }
     }
 
     await prisma.preview.update({
@@ -200,6 +263,8 @@ export const previewWorker = new Worker<PreviewJobData>(
         costUsd: totalCost,
       },
     });
+
+    console.log(`[preview] ✓ ${finalImages.length} images, ${styles.length} reels`);
   },
   {
     connection: redis,
