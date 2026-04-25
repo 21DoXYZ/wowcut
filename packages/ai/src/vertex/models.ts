@@ -24,10 +24,11 @@ export const VERTEX_PRICING_USD = {
   [VERTEX_MODELS.reasoning]: { input: 1.25 / 1_000_000, output: 10 / 1_000_000 },
   [VERTEX_MODELS.vision]: { input: 0.15 / 1_000_000, output: 0.6 / 1_000_000 },
   [VERTEX_MODELS.lite]: { input: 0.075 / 1_000_000, output: 0.3 / 1_000_000 },
-  // Image pricing per generated image
-  [VERTEX_MODELS.imageNative]: { image: 0.039 },
-  [VERTEX_MODELS.imagenHQ]: { image: 0.06 },
+  // Image pricing per generated image.
+  // imageNative === imagenFast (same Vertex model id "imagen-3.0-fast-generate-001"),
+  // so listing it once is enough — JS object literals can't have duplicate keys.
   [VERTEX_MODELS.imagenFast]: { image: 0.02 },
+  [VERTEX_MODELS.imagenHQ]: { image: 0.06 },
   // Video pricing per output second
   [VERTEX_MODELS.veo3]: { second: 0.75 },
   [VERTEX_MODELS.veo2]: { second: 0.35 },

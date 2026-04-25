@@ -573,6 +573,11 @@ model VideoProject {
 
   script Json? // { hook: string, scenes: [{ index, title, action, voiceover, duration }] }
 
+  // Optional reference clip (Instagram / TikTok / YouTube URL) used to seed style.
+  referenceUrl      String?
+  referenceData     Json? // raw scrape payload from Apify (caption, author, durations, raw item)
+  referenceAnalysis Json? // structured Gemini analysis (hook, pacing, mood, scenes, styleSummary)
+
   finalVideoUrl String?
   costUsd       Decimal? @db.Decimal(10, 6)
 
