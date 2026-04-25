@@ -3,7 +3,9 @@ import {
   PutObjectCommand,
   GetObjectCommand,
   DeleteObjectCommand,
+  DeleteObjectsCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -58,6 +60,45 @@ export async function uploadObject(input: UploadInput): Promise<string> {
 export async function deleteObject(key: string): Promise<void> {
   const client = getClient();
   await client.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }));
+}
+
+/**
+ * Delete every object under a prefix. Paginates through ListObjectsV2 and
+ * batches DeleteObjects (max 1000 keys per call). Best-effort — errors on a
+ * single batch are logged but don't abort the whole operation, since this is
+ * usually called from cleanup paths where partial progress is fine.
+ */
+export async function deletePrefix(prefix: string): Promise<{ deleted: number }> {
+  const client = getClient();
+  let token: string | undefined;
+  let deleted = 0;
+
+  do {
+    const listed = await client.send(
+      new ListObjectsV2Command({
+        Bucket: BUCKET,
+        Prefix: prefix,
+        ContinuationToken: token,
+      }),
+    );
+    const keys = listed.Contents?.map((o) => o.Key).filter((k): k is string => !!k) ?? [];
+    if (keys.length > 0) {
+      try {
+        await client.send(
+          new DeleteObjectsCommand({
+            Bucket: BUCKET,
+            Delete: { Objects: keys.map((Key) => ({ Key })), Quiet: true },
+          }),
+        );
+        deleted += keys.length;
+      } catch (err) {
+        console.error(`[storage] deletePrefix batch failed for ${prefix}:`, err);
+      }
+    }
+    token = listed.IsTruncated ? listed.NextContinuationToken : undefined;
+  } while (token);
+
+  return { deleted };
 }
 
 export async function objectExists(key: string): Promise<boolean> {

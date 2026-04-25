@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { generateStructured, VERTEX_MODELS } from "../vertex";
+import type { ReferenceAnalysis } from "../reference/analyze-video";
 
 export const SceneScriptSchema = z.object({
   index: z.number().int().min(0),
@@ -55,16 +56,32 @@ Output JSON only. Durations must sum exactly to the requested total.`;
 export async function generateVideoScript(
   topic: string,
   duration: "s15" | "s30" | "s60",
+  reference?: ReferenceAnalysis | null,
 ): Promise<VideoScript> {
   const { scenes, secEach } = DURATION_SCENE_MAP[duration]!;
   const totalSeconds = parseInt(duration.replace("s", ""));
+
+  const referenceBlock = reference
+    ? `
+
+REFERENCE STYLE (mimic the rhythm, pacing and visual language — NOT the literal content):
+- Content type: ${reference.contentType}
+- Pacing: ${reference.pacing}
+- Mood: ${reference.mood}
+- Color grading: ${reference.colorGrading}
+- Transitions: ${reference.transitionStyle}
+- Camera: ${reference.cameraStyle}
+- Hook pattern: ${reference.hook}
+- Style guidance: ${reference.styleSummary}
+- Reference scene flow: ${reference.scenes.map((s) => `(${s.approxDurationS}s) ${s.description}`).join(" → ")}`
+    : "";
 
   const result = await generateStructured({
     model: VERTEX_MODELS.vision, // gemini-2.5-flash — fast + cheap
     system: SYSTEM,
     userText: `Topic: "${topic}"
 Total duration: ${totalSeconds} seconds
-Target scenes: ${scenes} (roughly ${secEach}s each)
+Target scenes: ${scenes} (roughly ${secEach}s each)${referenceBlock}
 
 Write a scene-by-scene script for a satisfying, viral short-form video.
 Each scene has:

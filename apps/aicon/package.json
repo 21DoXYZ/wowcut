@@ -25,9 +25,12 @@
     "@wowcut/shared": "workspace:*",
     "@wowcut/ai": "workspace:*",
     "@wowcut/storage": "workspace:*",
+    "@wowcut/queues": "workspace:*",
     "clsx": "^2.1.1",
     "tailwind-merge": "^2.3.0",
-    "date-fns": "^3.6.0"
+    "date-fns": "^3.6.0",
+    "bullmq": "^5.10.0",
+    "ioredis": "^5.4.1"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

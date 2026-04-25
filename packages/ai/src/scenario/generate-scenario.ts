@@ -7,7 +7,8 @@ import { BRAND_SCENARIO_RESPONSE_SCHEMA } from "./response-schema";
 
 function padToThree<T>(arr: T[]): [T, T, T] {
   if (arr.length === 0) throw new Error("Scene array is empty");
-  while (arr.length < 3) arr.push(arr[arr.length - 1]);
+  const last = arr[arr.length - 1] as T;
+  while (arr.length < 3) arr.push(last);
   return arr.slice(0, 3) as [T, T, T];
 }
 

@@ -3,6 +3,7 @@ import { SocialReel, SocialReelSchema, SOCIAL_REEL_CONFIG } from "./compositions
 import { EditorialShowcase, EditorialShowcaseSchema, EDITORIAL_SHOWCASE_CONFIG } from "./compositions/EditorialShowcase";
 import { CgiReveal, CgiRevealSchema, CGI_REVEAL_CONFIG } from "./compositions/CgiReveal";
 import { FashionCampaign, FashionCampaignSchema, FASHION_CAMPAIGN_CONFIG } from "./compositions/FashionCampaign";
+import { AiconStitch, AiconStitchSchema, AICON_STITCH_CONFIG, type AiconStitchProps } from "./compositions/AiconStitch";
 
 export function Root() {
   return (
@@ -45,6 +46,23 @@ export function Root() {
         defaultProps={{
           imageUrl: "https://placehold.co/1080x1920/120830/C084FC?text=CGI+Product",
           productName: "Product Name",
+        }}
+      />
+
+      <Composition<typeof AiconStitchSchema, AiconStitchProps>
+        {...AICON_STITCH_CONFIG}
+        component={AiconStitch}
+        schema={AiconStitchSchema}
+        defaultProps={{
+          scenes: [
+            { videoUrl: "https://placehold.co/1080x1920.mp4", durationS: 5, caption: "Scene 1" },
+          ],
+        }}
+        calculateMetadata={({ props }) => {
+          const totalSec = props.scenes.reduce((acc, s) => acc + s.durationS, 0);
+          return {
+            durationInFrames: Math.max(1, Math.round(totalSec * AICON_STITCH_CONFIG.fps)),
+          };
         }}
       />
 

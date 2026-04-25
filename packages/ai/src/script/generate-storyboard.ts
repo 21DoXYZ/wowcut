@@ -67,3 +67,40 @@ export async function generateAllSceneVisuals(
     scenes.map((scene) => generateSceneVisual(topic, scene, scenes.length)),
   );
 }
+
+/**
+ * Rewrite an existing image prompt to incorporate user feedback.
+ * Used when a user clicks "Redo" with a comment like "more dramatic light".
+ */
+export async function regenerateSceneVisualWithFeedback(input: {
+  topic: string;
+  scene: SceneScript;
+  totalScenes: number;
+  previousPrompt: string;
+  feedback: string;
+}): Promise<SceneVisual> {
+  const result = await generateStructured({
+    model: VERTEX_MODELS.lite,
+    system: SYSTEM,
+    userText: `Video topic: "${input.topic}"
+Scene ${input.scene.index + 1} of ${input.totalScenes}: "${input.scene.title}"
+Action: ${input.scene.action}
+${input.scene.voiceover ? `On-screen text: "${input.scene.voiceover}"` : ""}
+Scene duration: ${input.scene.durationS}s
+
+PREVIOUS PROMPT (user wasn't satisfied):
+${input.previousPrompt}
+
+USER FEEDBACK:
+${input.feedback}
+
+Rewrite the Imagen 3 prompt so it directly addresses the feedback while keeping
+the scene faithful to the action. Be specific about what changes (lighting,
+angle, mood, composition). Output JSON only.`,
+    schema: SceneVisualSchema,
+    responseSchema: RESPONSE_SCHEMA,
+    maxOutputTokens: 512,
+    temperature: 0.7,
+  });
+  return result.data;
+}

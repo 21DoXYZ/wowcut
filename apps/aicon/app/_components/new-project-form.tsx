@@ -21,6 +21,8 @@ export function NewProjectForm() {
   const router = useRouter();
   const [topic, setTopic] = useState("");
   const [duration, setDuration] = useState<"s15" | "s30" | "s60">("s30");
+  const [referenceUrl, setReferenceUrl] = useState("");
+  const [showReference, setShowReference] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +34,11 @@ export function NewProjectForm() {
     setLoading(true);
     setError(null);
     try {
-      const project = await create.mutateAsync({ topic: topic.trim(), duration });
+      const project = await create.mutateAsync({
+        topic: topic.trim(),
+        duration,
+        referenceUrl: referenceUrl.trim() || undefined,
+      });
       router.push(`/projects/${project.id}`);
     } catch (err) {
       setError((err as Error).message);
@@ -91,6 +97,44 @@ export function NewProjectForm() {
         ))}
       </div>
 
+      {/* Reference URL (optional) */}
+      <div>
+        {!showReference ? (
+          <button
+            type="button"
+            onClick={() => setShowReference(true)}
+            className="text-[12px] text-white/40 hover:text-white/70 transition-colors"
+          >
+            + Add reference video (Instagram / TikTok / YouTube)
+          </button>
+        ) : (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-[12px] text-white/50 font-mono uppercase tracking-[0.6px]">
+                Reference URL
+              </label>
+              <button
+                type="button"
+                onClick={() => { setShowReference(false); setReferenceUrl(""); }}
+                className="text-[11px] text-white/30 hover:text-white/60"
+              >
+                remove
+              </button>
+            </div>
+            <input
+              type="url"
+              value={referenceUrl}
+              onChange={(e) => setReferenceUrl(e.target.value)}
+              placeholder="https://www.instagram.com/reel/... or tiktok.com/... or youtu.be/..."
+              className="w-full bg-white/6 border border-white/12 rounded-xl px-4 py-3 text-[13px] text-white placeholder:text-white/25 focus:outline-none focus:border-indigo-500/70 transition-colors"
+            />
+            <p className="text-[11px] text-white/30">
+              We&rsquo;ll watch the clip and mimic its pacing, mood and cut style for your topic.
+            </p>
+          </div>
+        )}
+      </div>
+
       {error && (
         <p className="text-[13px] text-red-400 bg-red-400/8 rounded-lg px-4 py-2">{error}</p>
       )}
@@ -104,7 +148,7 @@ export function NewProjectForm() {
         {loading ? (
           <span className="flex items-center justify-center gap-2">
             <span className="inline-block h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            Writing script & storyboard…
+            Creating project…
           </span>
         ) : (
           "Generate video →"
