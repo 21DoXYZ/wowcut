@@ -4,6 +4,7 @@ import {
   generateScenario,
   assembleMoodboardPrompt,
   generateGeminiImage,
+  inferProductFromImage,
   runQc,
   STYLE_PRESETS,
 } from "@wowcut/ai";
@@ -58,6 +59,16 @@ export const previewWorker = new Worker<PreviewJobData>(
       intake.references.map((r) => fetchAsBase64(r.imageUrl)),
     );
 
+    // Infer product attributes from the first product image using Gemini Vision.
+    // This gives us a concrete product description for the image generation prompt.
+    const productInference = productImages[0]
+      ? await inferProductFromImage(productImages[0])
+      : undefined;
+
+    if (productInference) {
+      console.log(`[preview] product inferred: ${productInference.nameGuess} (${productInference.category})`);
+    }
+
     const selectedStyles: PreviewStyle[] =
       (intake.selectedStyles as PreviewStyle[] | undefined)?.length
         ? (intake.selectedStyles as PreviewStyle[])
@@ -101,6 +112,7 @@ export const previewWorker = new Worker<PreviewJobData>(
             scene,
             scenario: scenarioResult.scenario,
             product: intake.products[0]!,
+            productInference,
             isPreview: true,
           });
 
