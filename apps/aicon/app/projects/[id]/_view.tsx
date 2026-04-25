@@ -71,6 +71,9 @@ export function ProjectView({ projectId }: { projectId: string }) {
   const reviewScene = trpc.project.reviewScene.useMutation({
     onSuccess: () => refetch(),
   });
+  const retryScene = trpc.project.retryScene.useMutation({
+    onSuccess: () => refetch(),
+  });
   const startAnimation = trpc.project.startAnimation.useMutation({
     onSuccess: () => refetch(),
   });
@@ -84,7 +87,11 @@ export function ProjectView({ projectId }: { projectId: string }) {
   }
 
   const scenes = project.scenes ?? [];
-  const allImagesReady = scenes.every((s) => s.imageStatus === "done" || s.imageStatus === "failed");
+  const isBootstrapping = project.status === "draft";
+  const allImagesReady =
+    !isBootstrapping &&
+    scenes.length > 0 &&
+    scenes.every((s) => s.imageStatus === "done" || s.imageStatus === "failed");
   const approvedCount = scenes.filter((s) => s.approved).length;
   const animatedCount = scenes.filter((s) => s.videoStatus === "done").length;
   const canAnimate = approvedCount > 0 && project.status === "reviewing";
@@ -96,12 +103,52 @@ export function ProjectView({ projectId }: { projectId: string }) {
         <Link href="/" className="text-white/40 hover:text-white text-[13px] transition-colors">← Back</Link>
         <span className="text-white/20">|</span>
         <span className="text-[14px] font-medium text-white/80 truncate">{project.topic}</span>
-        <span className="ml-auto text-[11px] font-mono text-white/30 bg-white/6 px-2.5 py-1 rounded-full">
-          {project.status}
+        {project.costUsd !== null && Number(project.costUsd) > 0 ? (
+          <span className="ml-auto text-[11px] font-mono text-white/30">
+            ${Number(project.costUsd).toFixed(2)}
+          </span>
+        ) : null}
+        <span className={project.costUsd !== null && Number(project.costUsd) > 0 ? "" : "ml-auto"}>
+          <span className="text-[11px] font-mono text-white/30 bg-white/6 px-2.5 py-1 rounded-full">
+            {project.status}
+          </span>
         </span>
       </header>
 
       <main className="max-w-[1100px] mx-auto px-6 py-10">
+        {/* Bootstrap state — script + storyboard still being generated */}
+        {isBootstrapping && (
+          <div className="mb-10 p-6 bg-white/4 border border-white/8 rounded-xl flex items-center gap-4">
+            <div className="h-5 w-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+            <div>
+              <p className="text-[14px] text-white/80">
+                {project.referenceUrl
+                  ? "Analysing reference clip & writing script…"
+                  : "Writing script & storyboard…"}
+              </p>
+              <p className="text-[12px] text-white/40 mt-0.5">
+                This usually takes 20-60 seconds.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Reference soft-fail notice */}
+        {project.referenceUrl && project.referenceFailed && (
+          <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+            <p className="text-[13px] text-amber-300">
+              ⚠ Couldn&rsquo;t process the reference clip — script generated from your topic alone.
+            </p>
+          </div>
+        )}
+
+        {/* Reference applied badge */}
+        {project.referenceAnalysis ? (
+          <div className="mb-6 p-3 bg-indigo-500/10 border border-indigo-500/25 rounded-xl text-[12px] text-indigo-300">
+            ✓ Style mimicked from your reference clip
+          </div>
+        ) : null}
+
         {/* Script overview */}
         {project.script && (
           <div className="mb-10 p-5 bg-white/4 border border-white/8 rounded-xl">
@@ -158,6 +205,16 @@ export function ProjectView({ projectId }: { projectId: string }) {
                   ) : isGenerating ? (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="h-5 w-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                    </div>
+                  ) : scene.imageStatus === "failed" ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-red-400/80 text-[12px]">
+                      <span>generation failed</span>
+                      <button
+                        onClick={() => retryScene.mutate({ sceneId: scene.id })}
+                        className="text-[11px] bg-white/8 hover:bg-white/15 text-white/70 rounded-lg px-3 py-1.5 transition-colors"
+                      >
+                        ↻ Retry
+                      </button>
                     </div>
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center text-white/15 text-[12px]">
