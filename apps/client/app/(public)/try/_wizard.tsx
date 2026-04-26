@@ -27,34 +27,39 @@ const STYLES: {
   name: string;
   tag: string;
   description: string;
+  usedFor: string;
   format: string;
 }[] = [
   {
     id: "social_style",
-    name: "Social Reel",
+    name: "Instagram / TikTok",
     tag: "Most popular",
-    description: "Lifestyle energy, authentic movement, platform-native feel.",
+    description: "Your product in real life — candid, natural, scroll-stopping. Ready to post.",
+    usedFor: "Stories, Reels, TikTok",
     format: "9:16 vertical",
   },
   {
     id: "editorial_hero",
-    name: "Editorial Hero",
-    tag: "Clean & premium",
-    description: "Studio-precise product focus. Geometry, texture, packaging.",
+    name: "Product photo",
+    tag: "Clean & sharp",
+    description: "Studio-clean shot of your product. Perfect for website, ads, and marketplace listings.",
+    usedFor: "Website, Amazon, ads",
     format: "1:1 square",
   },
   {
     id: "cgi_concept",
-    name: "CGI Concept",
-    tag: "Standout",
-    description: "Hyper-real 3D worlds. Impossible scenes, scale hyperbole.",
+    name: "Creative concept",
+    tag: "Stands out",
+    description: "Bold, surreal visual — your product in an impossible world. High attention value.",
+    usedFor: "Campaign hero, brand awareness",
     format: "9:16 vertical",
   },
   {
     id: "fashion_campaign",
-    name: "Fashion Campaign",
+    name: "With model",
     tag: "Premium",
-    description: "Styled scene with model. Brand storytelling through pose and light.",
+    description: "Your product styled on a person. Aspirational, brand-story feel.",
+    usedFor: "Fashion, beauty, lifestyle brands",
     format: "4:5 portrait",
   },
 ];
@@ -165,7 +170,7 @@ export function TryWizard() {
 
   const canContinue =
     (step === 1 && products.length >= 1) ||
-    (step === 2 && references.length >= 1) ||
+    step === 2 || // references are optional
     (step === 3 && selectedStyles.length >= 1) ||
     (step === 4 && /^#[0-9A-Fa-f]{6}$/.test(brandColor));
 
@@ -224,10 +229,10 @@ export function TryWizard() {
         {step === 2 && (
           <div>
             <h2 className="text-[24px] md:text-[28px] fw-540 tracking-[-0.5px] text-ink leading-[1.15]">
-              Show us the vibe
+              Any reference images? <span className="text-ink/35 fw-340">(optional)</span>
             </h2>
             <p className="mt-2 text-[15px] fw-340 tracking-[-0.14px] text-ink/70 leading-[1.5] max-w-[52ch]">
-              Drop 1-5 inspiration images — moods, lighting, aesthetics that feel like you.
+              Show us photos you like — a competitor, a vibe, a brand aesthetic. We use it to match the feel. Skip if you don't have any.
             </p>
 
             <div className="mt-6">
@@ -257,10 +262,10 @@ export function TryWizard() {
         {step === 3 && (
           <div>
             <h2 className="text-[24px] md:text-[28px] fw-540 tracking-[-0.5px] text-ink leading-[1.15]">
-              Pick your content styles
+              What kind of content do you need?
             </h2>
             <p className="mt-2 text-[15px] fw-340 tracking-[-0.14px] text-ink/70 leading-[1.5] max-w-[52ch]">
-              Choose one or more. We&rsquo;ll generate your moodboard in every style you pick.
+              Pick one or more. We generate 3 variations per type — takes about 60 seconds.
             </p>
 
             <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -292,9 +297,14 @@ export function TryWizard() {
                     <p className="mt-1.5 text-[13px] fw-330 tracking-[-0.14px] text-ink/65 leading-[1.4]">
                       {style.description}
                     </p>
-                    <p className="mt-2 text-[11px] fw-430 tracking-[0.2px] text-ink/40 uppercase">
-                      {style.format}
-                    </p>
+                    <div className="mt-3 flex items-center justify-between">
+                      <p className="text-[11px] fw-430 tracking-[0.2px] text-ink/40 uppercase">
+                        {style.format}
+                      </p>
+                      <p className="text-[11px] fw-430 tracking-[-0.1px] text-ink/45">
+                        {style.usedFor}
+                      </p>
+                    </div>
                   </button>
                 );
               })}
