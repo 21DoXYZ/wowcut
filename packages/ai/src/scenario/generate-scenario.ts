@@ -80,21 +80,30 @@ Now produce the creative direction JSON for THIS brand. Respond with JSON only, 
   const raw = result.data as Record<string, unknown>;
   const svs = raw.sceneVariantsByStyle as Record<string, unknown[]> | undefined;
   if (svs) {
-    const STYLES = ["social_style", "editorial_hero", "cgi_concept", "fashion_campaign"];
-    // First pass: pad styles that have at least 1 scene
-    for (const key of STYLES) {
+    const REQUIRED = ["social_style", "editorial_hero", "cgi_concept"];
+    const ALL = [...REQUIRED, "fashion_campaign"];
+
+    // First pass: pad any style that has at least 1 scene to exactly 3
+    for (const key of ALL) {
       if (Array.isArray(svs[key]) && svs[key].length > 0) {
         svs[key] = padToThree(svs[key]);
       }
     }
-    // Second pass: fill missing required styles from social_style or first available
+
+    // Second pass: fill missing required styles from fallback
     const fallback = (svs.social_style ?? svs.editorial_hero ?? svs.cgi_concept) as unknown[];
-    for (const key of ["social_style", "editorial_hero", "cgi_concept"]) {
-      if (!Array.isArray(svs[key]) || svs[key].length === 0) {
+    for (const key of REQUIRED) {
+      if (!Array.isArray(svs[key]) || (svs[key] as unknown[]).length === 0) {
         if (fallback && fallback.length > 0) {
           svs[key] = padToThree([...fallback]);
         }
       }
+    }
+
+    // Third pass: fashion_campaign is optional — if still empty/missing, delete it
+    // so Zod sees undefined (passes .optional()) rather than [] (fails .length(3))
+    if (!Array.isArray(svs.fashion_campaign) || (svs.fashion_campaign as unknown[]).length === 0) {
+      delete svs.fashion_campaign;
     }
   }
 
