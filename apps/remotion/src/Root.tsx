@@ -1,53 +1,49 @@
 import { Composition } from "remotion";
-import { HeroShot, HeroShotSchema, heroShotDefaults } from "./compositions/HeroShot";
-import { ProductDemo, ProductDemoSchema, productDemoDefaults } from "./compositions/ProductDemo";
-import { LifestyleCut, LifestyleCutSchema, lifestyleDefaults } from "./compositions/LifestyleCut";
-import { CatalogGrid, CatalogGridSchema, catalogDefaults } from "./compositions/CatalogGrid";
+import { SocialReel, SocialReelSchema, socialReelDefaults } from "./compositions/SocialReel";
+import { EditorialShowcase, EditorialShowcaseSchema, editorialDefaults } from "./compositions/EditorialShowcase";
+import { FashionCampaign, FashionCampaignSchema, fashionDefaults } from "./compositions/FashionCampaign";
 import { CgiReveal, CgiRevealSchema, cgiDefaults } from "./compositions/CgiReveal";
 
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Social style — 9:16 vertical reel, fast cuts, brand accent */}
       <Composition
-        id="HeroShot"
-        component={HeroShot}
-        schema={HeroShotSchema}
-        defaultProps={heroShotDefaults}
-        durationInFrames={150}
+        id="SocialReel"
+        component={SocialReel}
+        schema={SocialReelSchema}
+        defaultProps={socialReelDefaults}
+        durationInFrames={socialReelDefaults.images.length * 60 + 12}
         fps={30}
         width={1080}
         height={1920}
       />
+
+      {/* Editorial hero — 1:1 square, minimal, product + number counter */}
       <Composition
-        id="ProductDemo"
-        component={ProductDemo}
-        schema={ProductDemoSchema}
-        defaultProps={productDemoDefaults}
-        durationInFrames={180}
-        fps={30}
-        width={1080}
-        height={1920}
-      />
-      <Composition
-        id="LifestyleCut"
-        component={LifestyleCut}
-        schema={LifestyleCutSchema}
-        defaultProps={lifestyleDefaults}
-        durationInFrames={150}
+        id="EditorialShowcase"
+        component={EditorialShowcase}
+        schema={EditorialShowcaseSchema}
+        defaultProps={editorialDefaults}
+        durationInFrames={editorialDefaults.images.length * 70 + 18}
         fps={30}
         width={1080}
         height={1080}
       />
+
+      {/* Fashion campaign — 4:5 portrait, cinematic horizontal cuts + CTA */}
       <Composition
-        id="CatalogGrid"
-        component={CatalogGrid}
-        schema={CatalogGridSchema}
-        defaultProps={catalogDefaults}
-        durationInFrames={120}
+        id="FashionCampaign"
+        component={FashionCampaign}
+        schema={FashionCampaignSchema}
+        defaultProps={fashionDefaults}
+        durationInFrames={fashionDefaults.images.length * 65 + 20}
         fps={30}
         width={1080}
         height={1350}
       />
+
+      {/* CGI concept — 9:16 vertical, spring scale reveal on gradient */}
       <Composition
         id="CgiReveal"
         component={CgiReveal}
