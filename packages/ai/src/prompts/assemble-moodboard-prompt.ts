@@ -32,30 +32,44 @@ export function assembleMoodboardPrompt(
   const { stylePreset, scene, scenario, product, productInference, isPreview } = input;
   const tokens = STYLE_TOKENS[stylePreset];
 
-  // Use AI-inferred product description when available; fall back to intake fields
-  const productDescriptor = productInference
-    ? productInference.shortDescription
-    : [
-        product.nameGuess ?? "product",
-        product.shape ? `${product.shape} shape` : null,
-        product.material ? `${product.material} finish` : null,
-        product.dominantColor ? `dominant color ${product.dominantColor}` : null,
-      ]
-        .filter(Boolean)
-        .join(", ");
+  // Build rich product descriptor from AI inference or intake fields
+  let productDescriptor: string;
+  let productMaterialDetail = "";
+  if (productInference) {
+    const inf = productInference;
+    const colorLine = inf.accentColors && inf.accentColors !== "none"
+      ? `${inf.dominantColor} with ${inf.accentColors}`
+      : inf.dominantColor;
+    const materialLine = [inf.material, inf.texture, `${inf.finish} finish`].filter(Boolean).join(", ");
+    productMaterialDetail = `Material: ${materialLine}.`;
+    const featuresLine = inf.distinctiveFeatures && inf.distinctiveFeatures !== "none"
+      ? ` Distinctive features: ${inf.distinctiveFeatures}.`
+      : "";
+    productDescriptor = `${inf.shortDescription} Color: ${colorLine}. Shape: ${inf.shape}.${featuresLine}`;
+  } else {
+    productDescriptor = [
+      product.nameGuess ?? "product",
+      product.shape ? `${product.shape} shape` : null,
+      product.material ? `${product.material} finish` : null,
+      product.dominantColor ? `color: ${product.dominantColor}` : null,
+    ]
+      .filter(Boolean)
+      .join(", ");
+  }
 
   const moodLine = scenario.moodKeywords.slice(0, 6).join(", ");
 
   const parts: string[] = [
     tokens.opening,
-    `Subject: ${productDescriptor} — clearly visible as the primary focal subject, product must be faithfully reproduced.`,
-    `Scene: on ${scene.surface}, ${scene.lighting}, ${scene.angle} angle, ${scene.composition} composition.`,
-    `Context: ${scene.propsOrContext}.`,
+    `PRODUCT (must be faithfully reproduced as primary focal subject): ${productDescriptor}`,
+    productMaterialDetail,
+    `Scene: ${scene.surface}, ${scene.lighting} lighting, ${scene.angle} angle, ${scene.composition} composition.`,
+    `Props and context: ${scene.propsOrContext}.`,
     `Style: ${tokens.styleTokens}.`,
     `Mood: ${moodLine}.`,
-    `Color: ${scenario.colorGrading}.`,
+    `Color grading: ${scenario.colorGrading}.`,
     `Quality: ${tokens.qualityClause}.`,
-  ];
+  ].filter(Boolean);
 
   if (isPreview) {
     parts.push(

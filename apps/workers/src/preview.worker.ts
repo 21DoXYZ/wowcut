@@ -113,98 +113,101 @@ export const previewWorker = new Worker<PreviewJobData>(
     let totalCost = scenarioResult.costUsd;
     let globalIndex = 0;
 
+    // Fetch all style profiles up-front (single batch instead of per-style sequential calls)
+    const profileMap = Object.fromEntries(
+      await Promise.all(
+        styles.map(async (s) => [s, (await loadStyleProfile(s)) as unknown as import("@wowcut/ai").StyleProfile])
+      )
+    );
+
     for (const style of styles) {
       const scenes = scenarioResult.scenario.sceneVariantsByStyle[
         style as keyof typeof scenarioResult.scenario.sceneVariantsByStyle
       ];
       if (!scenes) continue;
 
-      const profile = (await loadStyleProfile(style)) as unknown as import("@wowcut/ai").StyleProfile;
+      const profile = profileMap[style]!;
       const styleImageUrls: string[] = [];
 
-      for (const scene of scenes) {
-        const candidates: {
-          url: string;
-          base64: string;
-          mimeType: string;
-          seed: number;
-          qcComposite: number;
-          costUsd: number;
-        }[] = [];
+      // Generate all scenes within this style in parallel
+      const sceneResults = await Promise.all(
+        scenes.map(async (scene) => {
+          // Generate all seeds for this scene in parallel
+          const seedResults = await Promise.allSettled(
+            Array.from({ length: PREVIEW.seedsPerScene }, async (_, seedIdx) => {
+              const assembled = assembleMoodboardPrompt({
+                stylePreset: style,
+                scene,
+                scenario: scenarioResult.scenario,
+                product: intake.products[0]!,
+                productInference,
+                isPreview: true,
+              });
 
-        for (let seedIdx = 0; seedIdx < PREVIEW.seedsPerScene; seedIdx++) {
-          const assembled = assembleMoodboardPrompt({
-            stylePreset: style,
-            scene,
-            scenario: scenarioResult.scenario,
-            product: intake.products[0]!,
-            productInference,
-            isPreview: true,
-          });
+              const genResult = await provider.generate({
+                model: PREVIEW_IMAGE_MODEL,
+                compiled: {
+                  prompt: assembled.prompt,
+                  negative: assembled.negative,
+                  params: { seed: assembled.seed },
+                  referenceImages: [],
+                },
+                format: "static",
+                aspectRatio: assembled.aspectRatio,
+              });
 
-          try {
-            // ── Provider-agnostic generation ──
-            const genResult = await provider.generate({
-              model: PREVIEW_IMAGE_MODEL,
-              compiled: {
+              const { base64, mimeType } = parseDataUrl(genResult.outputUrl);
+              const candidateKey = `previews/${preview.id}/scene-${scene.id}-seed${seedIdx}.jpg`;
+              const buffer = Buffer.from(base64, "base64");
+              const url = await uploadObject({
+                key: candidateKey,
+                body: buffer,
+                contentType: mimeType,
+              });
+
+              const preset = STYLE_PRESETS[style];
+              const mediaType: "image/jpeg" | "image/png" | "image/webp" =
+                mimeType.includes("png") ? "image/png"
+                : mimeType.includes("webp") ? "image/webp"
+                : "image/jpeg";
+
+              const qc = await runQc({
+                preset,
+                profile,
+                generatedImageUrl: url,
+                productImageUrl: intake.products[0]!.imageUrl,
+                referenceImageUrls: intake.references.map((r) => r.imageUrl),
+                brandColorsHex: [intake.brandColor, intake.secondaryColor].filter(Boolean) as string[],
                 prompt: assembled.prompt,
-                negative: assembled.negative,
-                params: { seed: assembled.seed },
-                referenceImages: [],
-              },
-              format: "static",
-              aspectRatio: assembled.aspectRatio,
-            });
+                generatedImageBase64: base64,
+                generatedImageMediaType: mediaType,
+              });
 
-            const { base64, mimeType } = parseDataUrl(genResult.outputUrl);
-            const candidateKey = `previews/${preview.id}/scene-${scene.id}-seed${seedIdx}.jpg`;
-            const buffer = Buffer.from(base64, "base64");
-            const url = await uploadObject({
-              key: candidateKey,
-              body: buffer,
-              contentType: mimeType,
-            });
+              return { url, base64, mimeType, seed: assembled.seed, qcComposite: qc.composite, costUsd: genResult.costUsd };
+            })
+          );
 
-            const preset = STYLE_PRESETS[style];
-            const mediaType: "image/jpeg" | "image/png" | "image/webp" =
-              mimeType.includes("png") ? "image/png"
-              : mimeType.includes("webp") ? "image/webp"
-              : "image/jpeg";
+          const candidates = seedResults
+            .filter((r): r is PromiseFulfilledResult<{ url: string; base64: string; mimeType: string; seed: number; qcComposite: number; costUsd: number }> => r.status === "fulfilled")
+            .map((r) => r.value);
 
-            const qc = await runQc({
-              preset,
-              profile,
-              generatedImageUrl: url,
-              productImageUrl: intake.products[0]!.imageUrl,
-              referenceImageUrls: intake.references.map((r) => r.imageUrl),
-              brandColorsHex: [intake.brandColor, intake.secondaryColor].filter(Boolean) as string[],
-              prompt: assembled.prompt,
-              generatedImageBase64: base64,
-              generatedImageMediaType: mediaType,
-            });
+          seedResults
+            .filter((r): r is PromiseRejectedResult => r.status === "rejected")
+            .forEach((r, i) => console.error(`[preview] scene ${scene.id} seed ${i} failed`, r.reason));
 
-            candidates.push({
-              url,
-              base64,
-              mimeType,
-              seed: assembled.seed,
-              qcComposite: qc.composite,
-              costUsd: genResult.costUsd,
-            });
-            totalCost += genResult.costUsd;
-          } catch (err) {
-            console.error(`[preview] scene ${scene.id} seed ${seedIdx} failed`, err);
+          if (candidates.length === 0) {
+            throw new Error(`All ${PREVIEW.seedsPerScene} seeds failed for scene ${scene.id}`);
           }
-        }
 
-        if (candidates.length === 0) {
-          throw new Error(`All ${PREVIEW.seedsPerScene} seeds failed for scene ${scene.id}`);
-        }
+          candidates.sort((a, b) => b.qcComposite - a.qcComposite);
+          const winner = candidates[0]!;
+          totalCost += candidates.reduce((sum, c) => sum + c.costUsd, 0);
+          return { scene, winner };
+        })
+      );
 
-        candidates.sort((a, b) => b.qcComposite - a.qcComposite);
-        const winner = candidates[0]!;
+      for (const { scene, winner } of sceneResults) {
         styleImageUrls.push(winner.url);
-
         finalImages.push({
           index: globalIndex,
           stylePreset: style,
