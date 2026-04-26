@@ -11,7 +11,7 @@ import {
 
 let cachedBundleUrl: string | null = null;
 
-const ENTRY_POINT = path.resolve(__dirname, "../../../packages/remotion/src/index.ts");
+const ENTRY_POINT = path.resolve(__dirname, "../../remotion/src/index.ts");
 
 async function getBundleUrl(): Promise<string> {
   if (cachedBundleUrl) return cachedBundleUrl;
