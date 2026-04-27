@@ -16,8 +16,9 @@ export async function middleware(request: NextRequest) {
       cookies: {
         getAll: () => request.cookies.getAll(),
         setAll: (cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) => {
-          // Refresh cookies on the outgoing response only.
-          // (request.cookies is read-only in Next.js middleware)
+          // Must set on request first so NextResponse.next({request}) inherits
+          // all previously-set cookies when called multiple times per refresh.
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options),

@@ -2,6 +2,7 @@ import { Worker, Queue } from "bullmq";
 import { QUEUE_NAMES, monthKey, PLAN_LIMITS } from "@wowcut/shared";
 import { prisma } from "@wowcut/db";
 import { sendEmail, TrendDropAnnouncementEmail } from "@wowcut/email";
+import { enqueueWeeklyBatch } from "@wowcut/queues";
 import { redis } from "./redis";
 
 export const trendWorker = new Worker(
@@ -50,6 +51,8 @@ export const trendWorker = new Worker(
         });
         unitIds.push(unit.id);
       }
+
+      await enqueueWeeklyBatch(unitIds);
 
       await prisma.trendDropAssignment.upsert({
         where: { trendDropId_clientId: { trendDropId: drop.id, clientId: client.id } },

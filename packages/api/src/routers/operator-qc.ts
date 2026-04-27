@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { router, operatorProcedure, adminProcedure } from "../trpc";
+import { enqueueRetry } from "@wowcut/queues";
 
 export const operatorQcRouter = router({
   queue: operatorProcedure
@@ -68,6 +69,7 @@ export const operatorQcRouter = router({
             metadata: { reason: entry.reason },
           },
         });
+        await enqueueRetry(entry.unitId);
       }
       return { retried: input.length };
     }),

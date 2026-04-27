@@ -119,6 +119,11 @@ export const seedancePollWorker = new Worker<SeedancePollJobData>(
           errorMessage: `Seedance polling timed out after ${MAX_ATTEMPTS} attempts`,
         },
       });
+      // Also surface failure to the operator QC queue
+      await prisma.contentPlanItem.updateMany({
+        where: { generations: { some: { id: generationId } }, status: "generating" },
+        data: { status: "failed" },
+      });
       return;
     }
 

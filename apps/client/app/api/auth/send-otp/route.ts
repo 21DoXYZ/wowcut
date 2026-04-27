@@ -1,6 +1,18 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import nodemailer from "nodemailer";
+
+async function findUserByEmail(admin: SupabaseClient, email: string) {
+  let page = 1;
+  while (true) {
+    const { data } = await admin.auth.admin.listUsers({ perPage: 1000, page });
+    if (!data?.users?.length) return null;
+    const match = data.users.find((u) => u.email === email);
+    if (match) return match;
+    if (data.users.length < 1000) return null;
+    page++;
+  }
+}
 
 function getAdminClient() {
   return createClient(
@@ -28,9 +40,8 @@ export async function POST(req: Request) {
 
   const supabase = getAdminClient();
 
-  // Verify user exists in Supabase auth
-  const { data: listData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-  const user = listData?.users?.find((u) => u.email === email.toLowerCase().trim());
+  // Find user by email — paginate through all pages (listUsers hard-caps at 1000/page)
+  const user = await findUserByEmail(supabase, email.toLowerCase().trim());
   if (!user) {
     // Don't reveal whether user exists
     return NextResponse.json({ ok: true });
