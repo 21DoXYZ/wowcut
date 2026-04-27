@@ -36,19 +36,19 @@ export async function POST(req: Request) {
     user_metadata: { _otp: null, _otp_exp: null },
   });
 
-  // Create session — return raw tokens so the browser client can call setSession()
-  // and store them in SSR-compatible cookies itself.
-  const { data: sessionData, error: sessionErr } = await admin.auth.admin.createSession({
-    userId: user.id,
+  // Generate a one-time magic-link token hash. The browser calls verifyOtp()
+  // with this hash, which sets SSR-compatible cookies via createBrowserClient.
+  const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+    type: "magiclink",
+    email: user.email!,
   });
 
-  if (sessionErr || !sessionData?.session) {
-    console.error("[verify-otp] createSession failed", sessionErr);
+  if (linkErr || !linkData?.properties?.hashed_token) {
+    console.error("[verify-otp] generateLink failed", linkErr);
     return NextResponse.json({ error: "session creation failed" }, { status: 500 });
   }
 
   return NextResponse.json({
-    access_token: sessionData.session.access_token,
-    refresh_token: sessionData.session.refresh_token,
+    token_hash: linkData.properties.hashed_token,
   });
 }

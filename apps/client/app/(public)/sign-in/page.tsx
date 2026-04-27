@@ -59,12 +59,12 @@ export default function SignInPage() {
         return;
       }
 
-      // Browser Supabase client stores tokens in SSR-compatible cookies.
-      // The server middleware will read them on the next request.
+      // verifyOtp with the hashed token — browser client writes SSR-compatible
+      // cookies that the server middleware reads on the next request.
       const supabase = getSupabase();
-      const { error: sessionError } = await supabase.auth.setSession({
-        access_token: json.access_token,
-        refresh_token: json.refresh_token,
+      const { error: sessionError } = await supabase.auth.verifyOtp({
+        token_hash: json.token_hash,
+        type: "email",
       });
 
       if (sessionError) {
