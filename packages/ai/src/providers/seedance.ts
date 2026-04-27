@@ -15,12 +15,12 @@ import { MODEL_COSTS_USD } from "@wowcut/shared";
 import type { GenerationJob, GenerationResult, Provider } from "./index";
 import type { GenerationModel } from "../prompts/presets";
 
-const DEFAULT_BASE = "https://ark.cn-beijing.volces.com/api/v3";
+const DEFAULT_BASE = "https://ark.ap-southeast.bytepluses.com/api/v3";
 
 // Model IDs as of April 2026
 export const SEEDANCE_MODELS = {
-  pro:  "doubao-seedance-2-0-260128",
-  fast: "doubao-seedance-2-0-fast-260128",
+  pro:  "dreamina-seedance-2-0-260128",
+  fast: "dreamina-seedance-2-0-fast-260128",
 } as const;
 
 export type SeedanceModel = keyof typeof SEEDANCE_MODELS;
@@ -75,7 +75,7 @@ export async function startSeedanceJob(
 
   const modelId = SEEDANCE_MODELS[input.model ?? "pro"];
 
-  // Content array: text prompt + optional first-frame image
+  // Content array: text prompt + optional reference image
   const content: Record<string, unknown>[] = [
     { type: "text", text: input.prompt },
   ];
@@ -84,12 +84,14 @@ export async function startSeedanceJob(
     content.push({
       type: "image_url",
       image_url: { url: input.imageUrl },
+      role: "reference_image",
     });
   }
 
   const body = {
     model: modelId,
     content,
+    generate_audio: false,
     ratio: toSeedanceRatio(input.aspectRatio),
     duration: input.durationSeconds ?? 5,
     watermark: false,
