@@ -30,7 +30,7 @@ export const StylePresetEnum = z.enum([
 export const BriefIntakeSchema = z.object({
   brandName: z.string().min(1).max(80).optional(),
   products: z.array(IntakeProductSchema).min(1).max(3),
-  references: z.array(IntakeReferenceSchema).min(1).max(5),
+  references: z.array(IntakeReferenceSchema).min(0).max(5),
   brandColor: HexColor,
   secondaryColor: HexColor.optional(),
   selectedStyles: z.array(StylePresetEnum).min(1).max(4).optional(),

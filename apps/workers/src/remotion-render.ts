@@ -1,6 +1,7 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import os from "node:os";
+import { execSync } from "node:child_process";
 import { bundle } from "@remotion/bundler";
 import {
   selectComposition,
@@ -12,6 +13,22 @@ import {
 let cachedBundleUrl: string | null = null;
 
 const ENTRY_POINT = path.resolve(__dirname, "../../remotion/src/index.ts");
+
+// Use system chromium if available (nixpacks installs it), otherwise Remotion downloads its own
+function getChromiumExecutablePath(): string | undefined {
+  if (process.env.CHROMIUM_EXECUTABLE_PATH) return process.env.CHROMIUM_EXECUTABLE_PATH;
+  for (const candidate of ["chromium", "chromium-browser", "google-chrome-stable", "google-chrome"]) {
+    try {
+      const p = execSync(`which ${candidate} 2>/dev/null`, { encoding: "utf8" }).trim();
+      if (p) return p;
+    } catch {
+      // not found
+    }
+  }
+  return undefined;
+}
+
+const CHROMIUM_PATH = getChromiumExecutablePath();
 
 async function getBundleUrl(): Promise<string> {
   if (cachedBundleUrl) return cachedBundleUrl;
@@ -46,10 +63,13 @@ export async function renderComposition(
   const started = Date.now();
   const serveUrl = await getBundleUrl();
 
+  const puppeteerExecutable = CHROMIUM_PATH ? { executablePath: CHROMIUM_PATH } : undefined;
+
   const composition = await selectComposition({
     serveUrl,
     id: input.compositionId,
     inputProps: input.inputProps,
+    ...(puppeteerExecutable ? { puppeteerExecutable } : {}),
   });
 
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wowcut-remotion-"));
@@ -64,6 +84,7 @@ export async function renderComposition(
       output: outputPath,
       imageFormat: "jpeg",
       jpegQuality: 88,
+      ...(puppeteerExecutable ? { puppeteerExecutable } : {}),
     });
     return {
       filePath: outputPath,
@@ -82,6 +103,7 @@ export async function renderComposition(
     jpegQuality: 88,
     pixelFormat: "yuv420p",
     onProgress: input.onProgress,
+    ...(puppeteerExecutable ? { puppeteerExecutable } : {}),
   });
 
   return {
