@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   Button,
   Card,
@@ -29,38 +30,48 @@ const STYLES: {
   description: string;
   usedFor: string;
   format: string;
+  main: string;
+  thumbs: [string, string];
 }[] = [
   {
     id: "social_style",
-    name: "Instagram / TikTok",
+    name: "Social style",
     tag: "Most popular",
-    description: "Your product in real life — candid, natural, scroll-stopping. Ready to post.",
-    usedFor: "Stories, Reels, TikTok",
-    format: "9:16 vertical",
+    description: "Real-life feel. Natural light, lifestyle props, scroll-stopping native content.",
+    usedFor: "Instagram, TikTok, Stories",
+    format: "4:5",
+    main: "/style-refs/social/4.jpeg",
+    thumbs: ["/style-refs/social/1.jpeg", "/style-refs/social/2.png"],
   },
   {
     id: "editorial_hero",
-    name: "Product photo",
+    name: "Editorial hero",
     tag: "Clean & sharp",
-    description: "Studio-clean shot of your product. Perfect for website, ads, and marketplace listings.",
+    description: "Studio-grade. Color-matched background, perfect lighting, product as the star.",
     usedFor: "Website, Amazon, ads",
-    format: "1:1 square",
+    format: "1:1",
+    main: "/style-refs/editorial/2.png",
+    thumbs: ["/style-refs/editorial/1.png", "/style-refs/editorial/4.png"],
   },
   {
     id: "cgi_concept",
-    name: "Creative concept",
+    name: "CGI concept",
     tag: "Stands out",
-    description: "Bold, surreal visual — your product in an impossible world. High attention value.",
+    description: "Impossible environments. Product at city scale, billboard takeover, arctic scenes.",
     usedFor: "Campaign hero, brand awareness",
-    format: "9:16 vertical",
+    format: "9:16",
+    main: "/style-refs/cgi/2.png",
+    thumbs: ["/style-refs/cgi/1.png", "/style-refs/cgi/4.png"],
   },
   {
     id: "fashion_campaign",
     name: "With model",
     tag: "Premium",
-    description: "Your product styled on a person. Aspirational, brand-story feel.",
-    usedFor: "Fashion, beauty, lifestyle brands",
-    format: "4:5 portrait",
+    description: "Your product on a person. Aspirational, editorial art direction, brand-story feel.",
+    usedFor: "Fashion, beauty, lifestyle",
+    format: "4:5",
+    main: "/style-refs/fashion/1.png",
+    thumbs: ["/style-refs/fashion/2.png", "/style-refs/fashion/3.jpeg"],
   },
 ];
 
@@ -262,13 +273,13 @@ export function TryWizard() {
         {step === 3 && (
           <div>
             <h2 className="text-[24px] md:text-[28px] fw-540 tracking-[-0.5px] text-ink leading-[1.15]">
-              What kind of content do you need?
+              Pick your style
             </h2>
             <p className="mt-2 text-[15px] fw-340 tracking-[-0.14px] text-ink/70 leading-[1.5] max-w-[52ch]">
-              Pick one or more. We generate 3 variations per type — takes about 60 seconds.
+              Select one or more - we generate 2-3 variations per style. You can see real examples below each card.
             </p>
 
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="mt-6 grid grid-cols-2 gap-3">
               {STYLES.map((style) => {
                 const selected = selectedStyles.includes(style.id);
                 return (
@@ -277,31 +288,52 @@ export function TryWizard() {
                     type="button"
                     onClick={() => toggleStyle(style.id)}
                     className={[
-                      "text-left p-4 rounded-xl border-2 transition-all",
+                      "text-left rounded-[16px] overflow-hidden border-2 transition-all",
                       selected
-                        ? "border-ink bg-ink/5"
-                        : "border-ink/12 hover:border-ink/30",
+                        ? "border-ink shadow-[0_0_0_3px_rgba(0,0,0,0.08)]"
+                        : "border-ink/10 hover:border-ink/30",
                     ].join(" ")}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="text-[15px] fw-540 tracking-[-0.2px] text-ink">
-                        {style.name}
-                      </span>
-                      <span className={[
-                        "shrink-0 mt-0.5 text-[10px] fw-540 tracking-[0.4px] uppercase px-2 py-0.5 rounded-full",
-                        selected ? "bg-ink text-paper" : "bg-ink/8 text-ink/55",
-                      ].join(" ")}>
-                        {selected ? "Selected" : style.tag}
-                      </span>
+                    {/* image area */}
+                    <div className="relative aspect-[3/4] overflow-hidden bg-ink/5">
+                      <Image
+                        src={style.main}
+                        alt={style.name}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 50vw, 280px"
+                      />
+                      {/* selected checkmark */}
+                      {selected && (
+                        <div className="absolute top-2.5 right-2.5 h-6 w-6 rounded-full bg-ink flex items-center justify-center shadow-md">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden><polyline points="20 6 9 17 4 12" /></svg>
+                        </div>
+                      )}
+                      {/* thumb strip */}
+                      <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-black/50 to-transparent flex items-end gap-1.5 p-2">
+                        {style.thumbs.map((img, i) => (
+                          <div key={i} className="relative h-10 w-8 rounded-[5px] overflow-hidden flex-shrink-0 border border-white/25">
+                            <Image src={img} alt="" fill className="object-cover" sizes="32px" />
+                          </div>
+                        ))}
+                        <span className="ml-auto text-[9px] fw-540 tracking-[0.3px] uppercase text-white/70 pb-0.5">{style.format}</span>
+                      </div>
                     </div>
-                    <p className="mt-1.5 text-[13px] fw-330 tracking-[-0.14px] text-ink/65 leading-[1.4]">
-                      {style.description}
-                    </p>
-                    <div className="mt-3 flex items-center justify-between">
-                      <p className="text-[11px] fw-430 tracking-[0.2px] text-ink/40 uppercase">
-                        {style.format}
-                      </p>
-                      <p className="text-[11px] fw-430 tracking-[-0.1px] text-ink/45">
+
+                    {/* text */}
+                    <div className={["p-3 transition-colors", selected ? "bg-ink/[0.04]" : "bg-paper"].join(" ")}>
+                      <div className="flex items-start justify-between gap-1">
+                        <span className="text-[14px] fw-540 tracking-[-0.2px] text-ink leading-tight">
+                          {style.name}
+                        </span>
+                        <span className={[
+                          "shrink-0 text-[9px] fw-540 tracking-[0.3px] uppercase px-1.5 py-0.5 rounded-full mt-0.5",
+                          selected ? "bg-ink text-paper" : "bg-ink/8 text-ink/50",
+                        ].join(" ")}>
+                          {selected ? "On" : style.tag}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-[12px] fw-330 tracking-[-0.1px] text-ink/60 leading-[1.4]">
                         {style.usedFor}
                       </p>
                     </div>
