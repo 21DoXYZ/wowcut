@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
 
 export async function POST(req: Request) {
   const { access_token, refresh_token } = (await req.json()) as {
@@ -12,17 +11,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "tokens required" }, { status: 400 });
   }
 
-  const cookieStore = cookies();
+  // Build response first so we can attach Set-Cookie headers to it directly.
+  const response = NextResponse.json({ ok: true });
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() { return cookieStore.getAll(); },
-        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options),
-          );
+        getAll: () => [],
+        setAll: (cookiesToSet) => {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options ?? {});
+          });
         },
       },
     },
@@ -35,5 +36,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 401 });
   }
 
-  return NextResponse.json({ ok: true });
+  return response;
 }
