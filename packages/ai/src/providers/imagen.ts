@@ -45,6 +45,7 @@ export async function generateImagen(input: ImagenCallInput): Promise<ImagenCall
     negativePrompt: input.negative,
     safetyFilterLevel: "BLOCK_ONLY_HIGH",
     personGeneration: "ALLOW_ADULT",
+    addWatermark: false,
   };
   if (input.seed != null) config.seed = input.seed;
 
