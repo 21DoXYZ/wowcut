@@ -31,7 +31,7 @@ function makeQueues() {
     trendQueue: new Queue(QUEUE_NAMES.trend, { connection }),
     onboardingCleanupQueue: new Queue(QUEUE_NAMES.onboardingCleanup, { connection }),
     weekPassExpiryQueue: new Queue(QUEUE_NAMES.weekPassExpiry, { connection }),
-    veoPollQueue: new Queue(QUEUE_NAMES.veoPoll, { connection }),
+    seedancePollQueue: new Queue(QUEUE_NAMES.seedancePoll, { connection }),
     aiconBootstrapQueue: new Queue(QUEUE_NAMES.aiconBootstrap, { connection }),
     aiconSceneQueue: new Queue(QUEUE_NAMES.aiconScene, { connection }),
     aiconAnimateQueue: new Queue(QUEUE_NAMES.aiconAnimate, { connection }),
@@ -98,18 +98,18 @@ export async function enqueueQc(generationId: string) {
   await q.add("qc", { generationId }, { attempts: 2 });
 }
 
-export async function enqueueVeoPoll(
+export async function enqueueSeedancePoll(
   generationId: string,
-  operationName: string,
+  taskId: string,
   attempt = 1,
   opts: { isAiconScene?: boolean } = {},
 ): Promise<void> {
-  const q = queues().veoPollQueue;
+  const q = queues().seedancePollQueue;
   // Exponential delay: first 15s, then 20s, 25s, ... capped at 45s.
   const delay = Math.min(15_000 + (attempt - 1) * 5_000, 45_000);
   await q.add(
-    "veo-poll",
-    { generationId, operationName, attempt, isAiconScene: opts.isAiconScene ?? false },
+    "seedance-poll",
+    { generationId, taskId, attempt, isAiconScene: opts.isAiconScene ?? false },
     { delay, attempts: 1, removeOnComplete: true },
   );
 }

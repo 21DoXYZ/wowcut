@@ -5,5 +5,5 @@ export {
   enqueueRetry,
   enqueueAssembly,
   enqueueQc,
-  enqueueVeoPoll,
+  enqueueSeedancePoll,
 } from "@wowcut/queues";

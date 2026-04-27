@@ -9,7 +9,7 @@ import {
 } from "@wowcut/ai";
 import { prisma } from "@wowcut/db";
 import { redis } from "./redis";
-import { qcQueue, enqueueVeoPoll } from "./queues";
+import { qcQueue, enqueueSeedancePoll } from "./queues";
 
 export interface GenerationJobData {
   unitId: string;
@@ -74,22 +74,22 @@ export const generationWorker = new Worker<GenerationJobData>(
         });
 
         const asyncPending = Boolean(result.providerMeta.asyncPending);
-        const veoOpName = result.providerMeta.veoOperationName as string | undefined;
+        const seedanceTaskId = result.providerMeta.seedanceTaskId as string | undefined;
 
-        if (asyncPending && veoOpName) {
-          // Veo long-running operation: persist operation name, queue poll job,
-          // leave generation in "running" state until veo-poll worker completes it.
+        if (asyncPending && seedanceTaskId) {
+          // Seedance long-running task: persist task ID, queue poll job,
+          // leave generation in "running" state until seedance-poll worker completes it.
           await prisma.generation.update({
             where: { id: generation.id },
             data: {
               status: "running",
               latencyMs: Date.now() - started,
               model: activeModel,
-              veoOperationName: veoOpName,
+              veoOperationName: seedanceTaskId, // reuse existing column
               costUsd: result.costUsd,
             },
           });
-          await enqueueVeoPoll(generation.id, veoOpName, 1);
+          await enqueueSeedancePoll(generation.id, seedanceTaskId, 1);
           await prisma.contentPlanItem.update({
             where: { id: unit.id },
             data: { status: "generating" },

@@ -150,7 +150,7 @@ export const QUEUE_NAMES = {
   trend: "trend-generation",
   onboardingCleanup: "onboarding-cleanup",
   weekPassExpiry: "week-pass-expiry",
-  veoPoll: "veo-poll",
+  seedancePoll: "seedance-poll",
   // aicon (content-farm app) queues
   aiconBootstrap: "aicon-bootstrap",
   aiconScene: "aicon-scene",
@@ -158,20 +158,20 @@ export const QUEUE_NAMES = {
   aiconAssembly: "aicon-assembly",
 } as const;
 
-// All costs in USD. Enum values map to Vertex AI models:
+// All costs in USD. Enum values map to generation models:
 //   nano_banana_2       -> gemini-2.5-flash-image-preview  (~$0.039 / image)
 //   nano_banana_2_hq    -> imagen-3.0-generate-002         (~$0.06 / image)
 //   flux_pro            -> imagen-3.0-fast-generate-001    (~$0.02 / image)
-//   kling_v2            -> veo-3.0-generate-001            (~$0.75 / sec of output)
-//   seedance_v2_pro     -> veo-3.0-generate-001            (same)
-//   runway_gen3         -> veo-2.0-generate-001            (~$0.35 / sec of output)
+//   kling_v2            -> seedance-2.0-pro (BytePlus)     (~$0.50 / sec of output)
+//   seedance_v2_pro     -> seedance-2.0-pro (BytePlus)     (~$0.50 / sec of output)
+//   runway_gen3         -> seedance-2.0 (BytePlus)         (~$0.25 / sec of output)
 // Legacy enum values are kept until a Prisma migration is performed; provider
 // router maps them to the new Vertex models.
 export const MODEL_COSTS_USD = {
   nano_banana_2: 0.039,
   nano_banana_2_hq: 0.06,
   flux_pro: 0.02,
-  kling_v2: 0.75,       // per output second
-  seedance_v2_pro: 0.75, // per output second
-  runway_gen3: 0.35,    // per output second
+  kling_v2: 0.50,       // per output second — seedance-2.0-pro
+  seedance_v2_pro: 0.50, // per output second — seedance-2.0-pro
+  runway_gen3: 0.25,    // per output second — seedance-2.0
 } as const;

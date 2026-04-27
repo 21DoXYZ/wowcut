@@ -3,15 +3,15 @@
  *
  * After user approves a scene, this worker:
  *   1. Takes the approved keyframe image
- *   2. Sends it to Veo (image-to-video) via startVeoJob
- *   3. Queues veo-poll to track completion
+ *   2. Sends it to Seedance 2.0 (BytePlus ModelArk) image-to-video
+ *   3. Queues seedance-poll to track completion
  *   4. On completion: videoUrl saved → if all scenes animated → trigger assembly
  */
 import { Worker } from "bullmq";
 import { prisma } from "@wowcut/db";
-import { startVeoJob } from "@wowcut/ai";
+import { startSeedanceJob } from "@wowcut/ai";
 import { redis } from "./redis";
-import { enqueueVeoPoll } from "@wowcut/queues";
+import { enqueueSeedancePoll } from "@wowcut/queues";
 
 export interface AiconAnimateJobData {
   sceneId: string;
@@ -33,36 +33,27 @@ export const aiconAnimateWorker = new Worker<AiconAnimateJobData>(
       data: { videoStatus: "generating" },
     });
 
-    // Fetch keyframe as base64 for Veo image-to-video
-    const res = await fetch(scene.imageUrl);
-    if (!res.ok) throw new Error(`Failed to fetch keyframe: ${res.status}`);
-    const buffer = Buffer.from(await res.arrayBuffer());
-    const imageBase64 = buffer.toString("base64");
-    const contentType = res.headers.get("content-type") ?? "image/jpeg";
-    const imageMimeType = contentType.includes("png") ? "image/png" : "image/jpeg";
-
     const videoPrompt = scene.imagePrompt
       ? `${scene.imagePrompt}. Smooth cinematic motion, satisfying and beautiful.`
       : `${scene.action}. Smooth cinematic motion, satisfying and beautiful.`;
 
-    const op = await startVeoJob({
-      model: "veo_2", // veo_2 is cheaper; switch to veo_3 for premium quality
+    // Seedance 2.0 image-to-video — pass the keyframe URL directly (no base64 needed)
+    const op = await startSeedanceJob({
+      model: "seedance-2.0-pro",
       prompt: videoPrompt,
       aspectRatio: "9:16",
-      durationSeconds: Math.min(8, Math.max(4, scene.durationS)) as 4 | 5 | 6 | 7 | 8,
-      imageBase64,
-      imageMimeType: imageMimeType as "image/jpeg" | "image/png",
+      durationSeconds: Math.min(8, Math.max(4, scene.durationS)),
+      imageUrl: scene.imageUrl,
     });
 
     await prisma.videoScene.update({
       where: { id: scene.id },
-      data: { veoOperationName: op.operationName },
+      data: { veoOperationName: op.taskId },
     });
 
-    // Queue veo polling via the shared helper so the aicon branch is honoured.
-    await enqueueVeoPoll(scene.id, op.operationName, 1, { isAiconScene: true });
+    await enqueueSeedancePoll(scene.id, op.taskId, 1, { isAiconScene: true });
 
-    console.log(`[aicon-animate] ✓ Veo started for scene ${scene.index}`);
+    console.log(`[aicon-animate] ✓ Seedance started for scene ${scene.index}`);
   },
   {
     connection: redis,

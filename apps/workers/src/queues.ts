@@ -12,7 +12,7 @@ export const deliveryQueue = q.deliveryQueue;
 export const trendQueue = q.trendQueue;
 export const onboardingCleanupQueue = q.onboardingCleanupQueue;
 export const weekPassExpiryQueue = q.weekPassExpiryQueue;
-export const veoPollQueue = q.veoPollQueue;
+export const seedancePollQueue = q.seedancePollQueue;
 export const aiconBootstrapQueue = q.aiconBootstrapQueue;
 export const aiconSceneQueue = q.aiconSceneQueue;
 export const aiconAnimateQueue = q.aiconAnimateQueue;
@@ -25,7 +25,7 @@ export {
   enqueueRetry,
   enqueueAssembly,
   enqueueQc,
-  enqueueVeoPoll,
+  enqueueSeedancePoll,
   enqueueAiconBootstrap,
   enqueueAiconScene,
   enqueueAiconAnimate,

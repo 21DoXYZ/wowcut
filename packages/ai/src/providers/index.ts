@@ -29,11 +29,12 @@ export {
 } from "./gemini-image";
 export { ImagenProvider, generateImagen } from "./imagen";
 export {
-  VeoProvider,
-  startVeoJob,
-  pollVeoJob,
-  type VeoOperation,
-  type VeoPollResult,
-  type VeoStartInput,
-} from "./veo";
+  SeedanceProvider,
+  startSeedanceJob,
+  pollSeedanceJob,
+  type SeedanceOperation,
+  type SeedancePollResult,
+  type SeedanceStartInput,
+  type SeedanceModel,
+} from "./seedance";
 export { routeProvider, fallbackModel } from "./router";

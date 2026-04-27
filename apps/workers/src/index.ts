@@ -7,7 +7,7 @@ import { weekPassExpiryWorker } from "./week-pass-expiry.worker";
 import { assemblyWorker } from "./assembly.worker";
 import { deliveryWorker, scheduleWeeklyDelivery } from "./delivery.worker";
 import { trendWorker, scheduleMonthlyTrend } from "./trend.worker";
-import { veoPollWorker } from "./veo-poll.worker";
+import { seedancePollWorker } from "./seedance-poll.worker";
 import { aiconBootstrapWorker } from "./aicon-bootstrap.worker";
 import { aiconSceneWorker } from "./aicon-scene.worker";
 import { aiconAnimateWorker } from "./aicon-animate.worker";
@@ -58,7 +58,7 @@ async function main() {
     ["delivery", deliveryWorker],
     ["trend", trendWorker],
     ["week-pass-expiry", weekPassExpiryWorker],
-    ["veo-poll", veoPollWorker],
+    ["seedance-poll", seedancePollWorker],
     ["aicon-bootstrap", aiconBootstrapWorker],
     ["aicon-scene", aiconSceneWorker],
     ["aicon-animate", aiconAnimateWorker],
