@@ -1,97 +1,61 @@
 import Link from "next/link";
-import { Button, MonoLabel, Badge } from "@wowcut/ui/components";
+import Image from "next/image";
+import { Button, MonoLabel } from "@wowcut/ui/components";
 
-// Mock content frames — simulates generated moodboard output in the hero
-function MockFrame({
-  label,
-  tag,
-  bg,
-  accent,
-  rotate = 0,
-}: {
-  label: string;
-  tag: string;
-  bg: string;
-  accent: string;
-  rotate?: number;
-}) {
-  return (
-    <div
-      className="relative aspect-[3/4] rounded-[14px] overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.45)] flex-shrink-0 w-[140px] sm:w-[160px]"
-      style={{ background: bg, transform: `rotate(${rotate}deg)` }}
-    >
-      <div className="absolute inset-0 p-4 flex flex-col justify-between">
-        <div className="flex justify-between items-start">
-          <div
-            className="h-1 w-8 rounded-full opacity-60"
-            style={{ background: accent }}
-          />
-          <div
-            className="h-6 w-6 rounded-full opacity-30"
-            style={{ background: accent }}
-          />
-        </div>
-        <div>
-          <div
-            className="h-1 w-3/4 rounded-full mb-1.5 opacity-40"
-            style={{ background: accent }}
-          />
-          <div
-            className="h-1 w-1/2 rounded-full mb-4 opacity-25"
-            style={{ background: accent }}
-          />
-          <span
-            className="text-[9px] uppercase tracking-[0.8px] font-mono px-2 py-1 rounded-full"
-            style={{ background: `${accent}22`, color: accent }}
-          >
-            {tag}
-          </span>
-        </div>
-      </div>
-      <div
-        className="absolute bottom-0 inset-x-0 h-1/2 opacity-30"
-        style={{
-          background: `linear-gradient(to top, ${accent}33, transparent)`,
-        }}
-      />
-    </div>
-  );
-}
+const HERO_COLS: { src: string; rotate: number }[][] = [
+  [
+    { src: "/style-refs/social/1.jpeg",   rotate: -1.5 },
+    { src: "/style-refs/editorial/1.png", rotate: 1    },
+  ],
+  [
+    { src: "/style-refs/cgi/1.png",       rotate: 2    },
+    { src: "/style-refs/social/3.png",    rotate: -0.5 },
+  ],
+  [
+    { src: "/style-refs/fashion/1.png",   rotate: 1.5  },
+    { src: "/style-refs/editorial/3.png", rotate: -1   },
+  ],
+];
 
 const STATS = [
   { value: "20", unit: "assets / mo", label: "Base plan" },
   { value: "60s", unit: "preview", label: "No signup" },
-  { value: "3", unit: "styles", label: "Social · Editorial · CGI" },
+  { value: "4", unit: "styles", label: "Social · Editorial · CGI · Fashion" },
   { value: "$49", unit: "week pass", label: "First try" },
 ];
 
-const STYLES = [
+const STYLES: { id: string; tag: string; title: string; body: string; main: string; thumbs: string[] }[] = [
   {
     id: "social_style",
     tag: "Instagram · TikTok",
     title: "Social Style",
     body: "UGC-feel, native contexts, everyday light. Designed to stop the scroll.",
-    bg: "linear-gradient(145deg, #0F1710 0%, #1A2E1B 50%, #0B1A0C 100%)",
-    accent: "#86FF6B",
-    example: ["Story-first framing", "Natural background", "Product close-up"],
+    main: "/style-refs/social/4.jpeg",
+    thumbs: ["/style-refs/social/2.png", "/style-refs/social/1.jpeg"],
   },
   {
     id: "editorial_hero",
     tag: "Catalog · PDP",
     title: "Editorial Hero",
     body: "Studio-grade composition, neutral ground, precise lighting. Built for e-com.",
-    bg: "linear-gradient(145deg, #F5F0EB 0%, #EDE5D8 50%, #E0D5C5 100%)",
-    accent: "#1A1612",
-    example: ["White / cream bg", "Product isolation", "Shadow control"],
+    main: "/style-refs/editorial/2.png",
+    thumbs: ["/style-refs/editorial/4.png", "/style-refs/editorial/1.png"],
   },
   {
     id: "cgi_concept",
     tag: "Hero · Campaign",
     title: "CGI Concept",
     body: "Physics-defying, impossible sets, viral hook moments. For brands that want attention.",
-    bg: "linear-gradient(145deg, #120830 0%, #1E0F4A 50%, #2D0A3E 100%)",
-    accent: "#C084FC",
-    example: ["Levitation & liquid", "Surreal environment", "Brand stunt"],
+    main: "/style-refs/cgi/2.png",
+    thumbs: ["/style-refs/cgi/4.png", "/style-refs/cgi/3.jpeg"],
+  },
+  {
+    id: "fashion_campaign",
+    tag: "Fashion · Beauty",
+    title: "With Model",
+    body: "Your product styled on a person. Aspirational, brand-story feel. Converts.",
+    main: "/style-refs/fashion/1.png",
+    thumbs: ["/style-refs/fashion/2.png", "/style-refs/fashion/3.jpeg"],
   },
 ];
 
@@ -99,29 +63,28 @@ const STEPS = [
   {
     n: "01",
     title: "Upload in 2 minutes",
-    body: "Drop 1–3 product photos and 3–5 style references. Pick your brand color. No brief, no call.",
-    detail: "Free · No account needed",
+    body: "Drop 1-3 product photos and style references. Pick your brand color. No brief, no call.",
+    detail: "Free - No account needed",
   },
   {
     n: "02",
     title: "See your moodboard",
-    body: "60–90 seconds. We generate 9 images across 3 styles tailored to your product. Favorite what you love.",
-    detail: "9 scenes · 3 styles",
+    body: "60-90 seconds. We generate 9 images across styles tailored to your product. Favorite what you love.",
+    detail: "9 scenes - 3-4 styles",
   },
   {
     n: "03",
     title: "Go live weekly",
     body: "Pay once or subscribe. Every Monday: 5 final assets, captions, hashtags, CSV. Retry any unit, pause anytime.",
-    detail: "From $49 week pass · $250/mo",
+    detail: "From $49 week pass - $250/mo",
   },
 ];
 
 export default function LandingPage() {
   return (
     <>
-      {/* ── HERO ────────────────────────────────────── */}
+      {/* HERO */}
       <section className="relative overflow-hidden bg-[#0A0908]">
-        {/* subtle grid lines */}
         <div
           className="absolute inset-0 opacity-[0.03] pointer-events-none"
           style={{
@@ -130,7 +93,6 @@ export default function LandingPage() {
             backgroundSize: "80px 80px",
           }}
         />
-        {/* glow */}
         <div className="absolute -top-32 -right-32 w-[600px] h-[600px] rounded-full bg-[#7a3bff] opacity-[0.07] blur-[120px] pointer-events-none" />
 
         <div className="relative max-w-[1280px] mx-auto px-6 lg:px-10 pt-20 md:pt-28 pb-16 md:pb-24">
@@ -152,7 +114,7 @@ export default function LandingPage() {
 
               <p className="mt-6 text-[17px] md:text-[18px] fw-330 tracking-[-0.2px] leading-[1.55] text-paper/60 max-w-[48ch]">
                 Upload products and references. We produce 20 on-brand assets every
-                month — static, motion, captions — for beauty and fashion brands
+                month - static, motion, captions - for beauty and fashion brands
                 that can&rsquo;t keep up with feed demand.
               </p>
 
@@ -174,62 +136,31 @@ export default function LandingPage() {
               </p>
             </div>
 
-            {/* Right: mock moodboard */}
+            {/* Right: real image moodboard */}
             <div className="hidden lg:flex items-end gap-3 pb-2 flex-shrink-0">
-              <div className="flex flex-col gap-3 mb-8">
-                <MockFrame
-                  label="Social"
-                  tag="SOCIAL"
-                  bg="linear-gradient(145deg,#0F1710,#1A2E1B)"
-                  accent="#86FF6B"
-                  rotate={-1.5}
-                />
-                <MockFrame
-                  label="Editorial"
-                  tag="EDITORIAL"
-                  bg="linear-gradient(145deg,#1A1612,#2E2822)"
-                  accent="#E8D5C0"
-                  rotate={1}
-                />
-              </div>
-              <div className="flex flex-col gap-3">
-                <MockFrame
-                  label="CGI"
-                  tag="CGI"
-                  bg="linear-gradient(145deg,#120830,#2D0A3E)"
-                  accent="#C084FC"
-                  rotate={2}
-                />
-                <MockFrame
-                  label="Social"
-                  tag="SOCIAL"
-                  bg="linear-gradient(145deg,#0F1710,#1A2E1B)"
-                  accent="#86FF6B"
-                  rotate={-0.5}
-                />
-              </div>
-              <div className="flex flex-col gap-3 mb-4">
-                <MockFrame
-                  label="CGI"
-                  tag="CGI"
-                  bg="linear-gradient(145deg,#1A1612,#2E2822)"
-                  accent="#E8D5C0"
-                  rotate={1.5}
-                />
-                <MockFrame
-                  label="Editorial"
-                  tag="EDITORIAL"
-                  bg="linear-gradient(145deg,#120830,#2D0A3E)"
-                  accent="#C084FC"
-                  rotate={-1}
-                />
-              </div>
+              {HERO_COLS.map((col, ci) => (
+                <div
+                  key={ci}
+                  className="flex flex-col gap-3"
+                  style={{ marginBottom: ci === 0 ? "2rem" : ci === 2 ? "1rem" : "0" }}
+                >
+                  {col.map((card, i) => (
+                    <div
+                      key={i}
+                      className="relative w-[140px] sm:w-[155px] aspect-[3/4] rounded-[14px] overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.55)] flex-shrink-0"
+                      style={{ transform: `rotate(${card.rotate}deg)` }}
+                    >
+                      <Image src={card.src} alt="" fill className="object-cover" sizes="160px" />
+                    </div>
+                  ))}
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── STATS STRIP ─────────────────────────────── */}
+      {/* STATS STRIP */}
       <section className="border-y border-ink/8 bg-[#F7F5F2]">
         <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
           <div className="grid grid-cols-2 md:grid-cols-4">
@@ -255,13 +186,13 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── STYLES ──────────────────────────────────── */}
+      {/* STYLES */}
       <section className="max-w-[1280px] mx-auto px-6 lg:px-10 py-20 md:py-28">
         <div className="flex items-end justify-between gap-6 flex-wrap mb-12">
           <div>
             <MonoLabel className="text-ink/45">Output formats</MonoLabel>
             <h2 className="mt-3 brand-heading max-w-[22ch]">
-              Three styles. Every feed covered.
+              Four styles. Every feed covered.
             </h2>
           </div>
           <Link
@@ -272,52 +203,47 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           {STYLES.map((s) => (
             <div
               key={s.id}
               className="rounded-[18px] overflow-hidden border border-ink/8 hover:border-ink/20 transition-colors group"
             >
-              {/* visual panel */}
-              <div
-                className="aspect-[4/3] relative flex items-end p-5"
-                style={{ background: s.bg }}
-              >
-                <div className="flex gap-2 flex-wrap">
-                  {s.example.map((ex) => (
-                    <span
-                      key={ex}
-                      className="text-[10px] fw-440 tracking-[0.4px] px-2.5 py-1 rounded-full uppercase"
-                      style={{
-                        background: `${s.accent}18`,
-                        color: s.accent,
-                        border: `1px solid ${s.accent}30`,
-                      }}
-                    >
-                      {ex}
-                    </span>
-                  ))}
-                </div>
-                <div className="absolute top-4 right-4">
-                  <span
-                    className="text-[10px] fw-440 tracking-[0.5px] font-mono uppercase px-2.5 py-1 rounded-full"
-                    style={{
-                      background: `${s.accent}15`,
-                      color: `${s.accent}99`,
-                      border: `1px solid ${s.accent}25`,
-                    }}
-                  >
+              {/* image strip — 3 stacked thumbnails */}
+              <div className="relative aspect-[3/4] overflow-hidden bg-ink/5">
+                {/* main image */}
+                <Image
+                  src={s.main}
+                  alt={s.title}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  sizes="(max-width:768px) 50vw, 25vw"
+                />
+                {/* tag overlay */}
+                <div className="absolute top-3 left-3">
+                  <span className="text-[10px] fw-540 tracking-[0.4px] uppercase px-2.5 py-1 rounded-full bg-ink/60 text-paper/90 backdrop-blur-sm">
                     {s.tag}
                   </span>
+                </div>
+                {/* small preview strip bottom */}
+                <div className="absolute bottom-0 inset-x-0 h-20 bg-gradient-to-t from-ink/60 to-transparent flex items-end gap-1.5 p-3">
+                  {s.thumbs.map((img, i) => (
+                    <div
+                      key={i}
+                      className="relative h-12 w-9 rounded-[6px] overflow-hidden flex-shrink-0 border border-paper/20"
+                    >
+                      <Image src={img} alt="" fill className="object-cover" sizes="36px" />
+                    </div>
+                  ))}
                 </div>
               </div>
 
               {/* text */}
-              <div className="p-5 bg-paper">
-                <h3 className="text-[19px] fw-540 tracking-[-0.3px] leading-[1.2] text-ink">
+              <div className="p-4 bg-paper">
+                <h3 className="text-[17px] fw-540 tracking-[-0.3px] leading-[1.2] text-ink">
                   {s.title}
                 </h3>
-                <p className="mt-2 text-[14px] fw-330 tracking-[-0.14px] leading-[1.55] text-ink/60">
+                <p className="mt-1.5 text-[13px] fw-330 tracking-[-0.14px] leading-[1.5] text-ink/55">
                   {s.body}
                 </p>
               </div>
@@ -326,7 +252,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ────────────────────────────── */}
+      {/* HOW IT WORKS */}
       <section className="bg-[#0A0908]">
         <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-20 md:py-28">
           <div className="mb-14">
@@ -359,7 +285,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── BOTTOM CTA ──────────────────────────────── */}
+      {/* BOTTOM CTA */}
       <section className="relative overflow-hidden hero-gradient">
         <div
           className="absolute inset-0 opacity-30 pointer-events-none"
