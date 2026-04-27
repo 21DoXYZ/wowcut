@@ -47,7 +47,7 @@ export default function LibraryPage() {
       </div>
 
       <div className="mt-8 grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {list.data?.map((item) => (
+        {list.data?.items.map((item) => (
           <Card key={item.id} className="p-0 overflow-hidden">
             <div className="aspect-square bg-ink/5 relative">
               {item.unit.chosenGeneration?.outputUrl && (
