@@ -2,13 +2,13 @@ import type { GenerationModel } from "../prompts/presets";
 import type { Provider } from "./index";
 import { GeminiImageProvider } from "./gemini-image";
 import { ImagenProvider } from "./imagen";
-import { VeoProvider } from "./veo";
+import { SeedanceProvider } from "./seedance";
 
 let cachedProviders: Provider[] | null = null;
 
 function getProviders(): Provider[] {
   if (cachedProviders) return cachedProviders;
-  cachedProviders = [new GeminiImageProvider(), new ImagenProvider(), new VeoProvider()];
+  cachedProviders = [new GeminiImageProvider(), new ImagenProvider(), new SeedanceProvider()];
   return cachedProviders;
 }
 

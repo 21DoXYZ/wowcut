@@ -1,6 +1,6 @@
 import type { GenerationJob, GenerationResult, Provider } from "./index";
 import type { GenerationModel } from "../prompts/presets";
-import { getVertex } from "../vertex/client";
+import { getVertexImage } from "../vertex/client";
 import { VERTEX_MODELS } from "../vertex/models";
 
 export interface ImagenCallInput {
@@ -33,7 +33,7 @@ const IMAGEN_COSTS: Record<"imagen_3" | "imagen_3_fast", number> = {
 };
 
 export async function generateImagen(input: ImagenCallInput): Promise<ImagenCallResult> {
-  const ai = getVertex();
+  const ai = getVertexImage();
   const started = Date.now();
 
   const modelId =
