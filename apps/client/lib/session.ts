@@ -21,7 +21,7 @@ const DEV_SESSION: CurrentClientSession = {
 export async function getCurrentClient(): Promise<CurrentClientSession | null> {
   // Dev bypass: set cookie devbypass=1 in browser DevTools to skip auth.
   // Works regardless of env var configuration.
-  if (cookies().get("devbypass")?.value === "1") {
+  if (process.env.NODE_ENV === "development" && cookies().get("devbypass")?.value === "1") {
     return DEV_SESSION;
   }
 

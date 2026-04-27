@@ -1,6 +1,14 @@
 "use client";
 import { useState, useRef } from "react";
+import { createBrowserClient } from "@supabase/ssr";
 import { Button, Card, Input, Label, MonoLabel } from "@wowcut/ui/components";
+
+function getSupabase() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  );
+}
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -50,8 +58,21 @@ export default function SignInPage() {
         setError(json.error ?? "Invalid code");
         return;
       }
-      // Redirect to Supabase action link — it sets cookies and redirects to /auth/callback → /deliveries
-      window.location.href = json.redirectUrl;
+
+      // Browser Supabase client stores tokens in SSR-compatible cookies.
+      // The server middleware will read them on the next request.
+      const supabase = getSupabase();
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: json.access_token,
+        refresh_token: json.refresh_token,
+      });
+
+      if (sessionError) {
+        setError("Session error, try again");
+        return;
+      }
+
+      window.location.href = "/deliveries";
     } catch {
       setError("Network error, try again");
     } finally {
@@ -151,7 +172,7 @@ export default function SignInPage() {
 
             <button
               type="button"
-              onClick={() => { setStep("email"); setCode(["","","","","",""]); setError(null); }}
+              onClick={() => { setStep("email"); setCode(["", "", "", "", "", ""]); setError(null); }}
               className="w-full text-[13px] fw-330 text-ink/50 hover:text-ink/80 transition-colors"
             >
               Use a different email
