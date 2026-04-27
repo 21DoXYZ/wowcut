@@ -65,8 +65,12 @@ export const seedancePollWorker = new Worker<SeedancePollJobData>(
       });
       if (!scene) return;
 
-      // Download video from Seedance URL and re-upload to R2
-      const videoRes = await fetch(result.videoUrl);
+      // Download video from Seedance URL and re-upload to R2 (60s timeout)
+      const abortCtrl = new AbortController();
+      const fetchTimeout = setTimeout(() => abortCtrl.abort(), 60_000);
+      const videoRes = await fetch(result.videoUrl, { signal: abortCtrl.signal }).finally(() =>
+        clearTimeout(fetchTimeout),
+      );
       if (!videoRes.ok) throw new Error(`Failed to fetch Seedance video: ${videoRes.status}`);
       const buffer = Buffer.from(await videoRes.arrayBuffer());
       const key = `aicon/${scene.projectId}/scene-${scene.index}.mp4`;
@@ -140,8 +144,12 @@ export const seedancePollWorker = new Worker<SeedancePollJobData>(
       return;
     }
 
-    // Download from Seedance CDN and upload to R2
-    const videoRes = await fetch(result.videoUrl);
+    // Download from Seedance CDN and upload to R2 (60s timeout)
+    const abortCtrl2 = new AbortController();
+    const fetchTimeout2 = setTimeout(() => abortCtrl2.abort(), 60_000);
+    const videoRes = await fetch(result.videoUrl, { signal: abortCtrl2.signal }).finally(() =>
+      clearTimeout(fetchTimeout2),
+    );
     if (!videoRes.ok) throw new Error(`Failed to fetch Seedance video: ${videoRes.status}`);
     const buffer = Buffer.from(await videoRes.arrayBuffer());
     const key = R2Keys.generation(generationId, "mp4");

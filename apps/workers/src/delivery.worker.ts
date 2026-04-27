@@ -55,7 +55,10 @@ export const deliveryWorker = new Worker<DeliveryJobData>(
         key: csvKey,
         body: Buffer.from(csv, "utf-8"),
         contentType: "text/csv",
-      }).catch(() => "");
+      }).catch((err) => {
+        console.error("[delivery] CSV upload failed", client.slug, err);
+        return "";
+      });
 
       const delivery = await prisma.delivery.upsert({
         where: { clientId_weekKey: { clientId: client.id, weekKey: targetWeek } },
@@ -71,7 +74,7 @@ export const deliveryWorker = new Worker<DeliveryJobData>(
       if (process.env.RESEND_API_KEY) {
         await sendEmail({
           to: client.email,
-          subject: `Week: your ${units.length} new assets are ready`,
+          subject: `${targetWeek}: your ${units.length} new assets are ready`,
           react: DeliveryReadyEmail({
             brandName: client.name,
             weekNumber: Number(targetWeek.split("W")[1] ?? 0),

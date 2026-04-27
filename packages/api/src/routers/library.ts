@@ -11,12 +11,15 @@ export const libraryRouter = router({
         trendOnly: z.boolean().optional(),
         style: z.string().optional(),
         format: z.string().optional(),
+        cursor: z.string().optional(),
+        limit: z.number().int().min(1).max(100).default(40),
       }),
     )
     .query(async ({ ctx, input }) => {
-      return ctx.prisma.libraryItem.findMany({
+      const items = await ctx.prisma.libraryItem.findMany({
         where: {
           clientId: ctx.session.clientId!,
+          ...(input.cursor ? { id: { lt: input.cursor } } : {}),
           ...(input.favoritesOnly ? { isFavorite: true } : {}),
           unit: {
             ...(input.trendOnly ? { isTrendDrop: true } : {}),
@@ -27,9 +30,14 @@ export const libraryRouter = router({
         include: {
           unit: { include: { sku: true, chosenGeneration: true } },
         },
-        orderBy: { createdAt: "desc" },
-        take: 100,
+        orderBy: { id: "desc" },
+        take: input.limit + 1,
       });
+      const hasMore = items.length > input.limit;
+      return {
+        items: hasMore ? items.slice(0, input.limit) : items,
+        nextCursor: hasMore ? items[input.limit - 1]?.id : undefined,
+      };
     }),
 
   toggleFavorite: clientProcedure
