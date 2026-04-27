@@ -19,7 +19,7 @@ export default function SignInPage() {
       const { error: authErr } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/deliveries`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/deliveries`,
         },
       });
       if (authErr) setError(authErr.message);
