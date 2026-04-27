@@ -1,18 +1,8 @@
 "use client";
 import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { Button, Card, Input, Label, MonoLabel } from "@wowcut/ui/components";
-import { createBrowserClient } from "@supabase/ssr";
-
-function getSupabase() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
-}
 
 export default function SignInPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [step, setStep] = useState<"email" | "code">("email");
   const [code, setCode] = useState(["", "", "", "", "", ""]);
@@ -25,14 +15,19 @@ export default function SignInPage() {
     setLoading(true);
     setError(null);
     try {
-      const { error: authErr } = await getSupabase().auth.signInWithOtp({
-        email,
-        options: { shouldCreateUser: false },
+      const res = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
       });
-      if (authErr) setError(authErr.message);
-      else setStep("code");
-    } catch (err) {
-      setError((err as Error).message);
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error ?? "Failed to send code");
+      } else {
+        setStep("code");
+      }
+    } catch {
+      setError("Network error, try again");
     } finally {
       setLoading(false);
     }
@@ -45,18 +40,20 @@ export default function SignInPage() {
     setLoading(true);
     setError(null);
     try {
-      const { error: authErr } = await getSupabase().auth.verifyOtp({
-        email,
-        token,
-        type: "email",
+      const res = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), code: token }),
       });
-      if (authErr) {
-        setError(authErr.message);
-      } else {
-        router.push("/deliveries");
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error ?? "Invalid code");
+        return;
       }
-    } catch (err) {
-      setError((err as Error).message);
+      // Redirect to Supabase action link — it sets cookies and redirects to /auth/callback → /deliveries
+      window.location.href = json.redirectUrl;
+    } catch {
+      setError("Network error, try again");
     } finally {
       setLoading(false);
     }
@@ -69,7 +66,6 @@ export default function SignInPage() {
     setCode(next);
     if (digit && i < 5) inputRefs.current[i + 1]?.focus();
     if (next.every((d) => d !== "")) {
-      // auto-submit when all 6 digits filled
       setTimeout(() => {
         const form = document.getElementById("code-form") as HTMLFormElement | null;
         form?.requestSubmit();
