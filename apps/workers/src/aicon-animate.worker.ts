@@ -39,7 +39,7 @@ export const aiconAnimateWorker = new Worker<AiconAnimateJobData>(
 
     // Seedance 2.0 image-to-video — pass the keyframe URL directly (no base64 needed)
     const op = await startSeedanceJob({
-      model: "seedance-2.0-pro",
+      model: "pro",
       prompt: videoPrompt,
       aspectRatio: "9:16",
       durationSeconds: Math.min(8, Math.max(4, scene.durationS)),
