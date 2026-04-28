@@ -144,13 +144,17 @@ export const previewWorker = new Worker<PreviewJobData>(
                 isPreview: true,
               });
 
+              const productRef = productImages[0]
+                ? [`data:${productImages[0].mediaType};base64,${productImages[0].data}`]
+                : [];
+
               const genResult = await provider.generate({
                 model: PREVIEW_IMAGE_MODEL,
                 compiled: {
                   prompt: assembled.prompt,
                   negative: assembled.negative,
                   params: { seed: assembled.seed },
-                  referenceImages: [],
+                  referenceImages: productRef,
                 },
                 format: "static",
                 aspectRatio: assembled.aspectRatio,

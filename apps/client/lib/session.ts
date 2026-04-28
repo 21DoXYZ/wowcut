@@ -26,24 +26,13 @@ export async function getCurrentClient(): Promise<CurrentClientSession | null> {
   }
 
   const supabase = supabaseServerClient();
-  if (!supabase) {
-    console.log("[session] supabaseServerClient returned null - missing env vars");
-    return null;
-  }
+  if (!supabase) return null;
   const {
     data: { user },
-    error: userError,
   } = await supabase.auth.getUser();
-  if (!user?.email) {
-    console.log("[session] getUser returned no user", userError?.message);
-    return null;
-  }
-  console.log("[session] got user:", user.email);
+  if (!user?.email) return null;
   const client = await prisma.client.findUnique({ where: { email: user.email } });
-  if (!client) {
-    console.log("[session] no Client row for:", user.email, "DB:", process.env.DATABASE_URL?.slice(0, 50));
-    return null;
-  }
+  if (!client) return null;
   return {
     email: client.email,
     clientId: client.id,
