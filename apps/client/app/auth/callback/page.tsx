@@ -8,24 +8,36 @@ export default function AuthCallbackPage() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const code = searchParams.get("code");
-    if (!code) {
-      router.replace("/sign-in?error=no_code");
-      return;
-    }
-
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     );
 
-    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-      if (error) {
-        router.replace("/sign-in?error=auth_failed");
-      } else {
-        router.replace("/deliveries");
-      }
-    });
+    const code = searchParams.get("code");
+
+    if (code) {
+      // PKCE flow: exchange code for session
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (error) {
+          router.replace("/sign-in?error=auth_failed");
+        } else {
+          router.replace("/deliveries");
+        }
+      });
+      return;
+    }
+
+    // Implicit / token flow: createBrowserClient auto-processes URL hash,
+    // just need to wait a tick then read the session.
+    setTimeout(() => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          router.replace("/deliveries");
+        } else {
+          router.replace("/sign-in?error=auth_failed");
+        }
+      });
+    }, 100);
   }, [searchParams, router]);
 
   return (
