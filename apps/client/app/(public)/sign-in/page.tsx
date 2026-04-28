@@ -64,11 +64,11 @@ export default function SignInPage() {
       const supabase = getSupabase();
       const { error: sessionError } = await supabase.auth.verifyOtp({
         token_hash: json.token_hash,
-        type: "email",
+        type: "magiclink",
       });
 
       if (sessionError) {
-        setError("Session error, try again");
+        setError(sessionError.message ?? "Session error, try again");
         return;
       }
 
