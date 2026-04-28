@@ -3,7 +3,7 @@ import { useState, useRef } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { Button, Card, Input, Label, MonoLabel } from "@wowcut/ui/components";
 
-function getSupabase() {
+function supabase() {
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -22,23 +22,16 @@ export default function SignInPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    try {
-      const res = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim().toLowerCase() }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        setError(json.error ?? "Failed to send code");
-      } else {
-        setStep("code");
-      }
-    } catch {
-      setError("Network error, try again");
-    } finally {
-      setLoading(false);
+    const { error: err } = await supabase().auth.signInWithOtp({
+      email: email.trim().toLowerCase(),
+      options: { shouldCreateUser: false },
+    });
+    setLoading(false);
+    if (err) {
+      setError("Email not found. Contact support if you have an account.");
+      return;
     }
+    setStep("code");
   }
 
   async function verifyCode(e: React.FormEvent) {
@@ -47,37 +40,17 @@ export default function SignInPage() {
     if (token.length < 6) return;
     setLoading(true);
     setError(null);
-    try {
-      const res = await fetch("/api/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim().toLowerCase(), code: token }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        setError(json.error ?? "Invalid code");
-        return;
-      }
-
-      // verifyOtp with the hashed token — browser client writes SSR-compatible
-      // cookies that the server middleware reads on the next request.
-      const supabase = getSupabase();
-      const { error: sessionError } = await supabase.auth.verifyOtp({
-        token_hash: json.token_hash,
-        type: "magiclink",
-      });
-
-      if (sessionError) {
-        setError(sessionError.message ?? "Session error, try again");
-        return;
-      }
-
-      window.location.href = "/deliveries";
-    } catch {
-      setError("Network error, try again");
-    } finally {
-      setLoading(false);
+    const { error: err } = await supabase().auth.verifyOtp({
+      email: email.trim().toLowerCase(),
+      token,
+      type: "email",
+    });
+    setLoading(false);
+    if (err) {
+      setError(err.message);
+      return;
     }
+    window.location.href = "/deliveries";
   }
 
   function onCodeInput(i: number, val: string) {
