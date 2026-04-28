@@ -67,6 +67,37 @@ export const subscriptionRouter = router({
     return { ok: true };
   }),
 
+  preferences: clientProcedure.query(async ({ ctx }) => {
+    const client = await ctx.prisma.client.findUnique({
+      where: { id: ctx.session.clientId! },
+      select: { emailNotifications: true, trendDropOptOut: true },
+    });
+    if (!client) throw new TRPCError({ code: "NOT_FOUND" });
+    return client;
+  }),
+
+  updatePreferences: clientProcedure
+    .input(
+      z.object({
+        emailNotifications: z.boolean().optional(),
+        trendDropOptOut: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.prisma.client.update({
+        where: { id: ctx.session.clientId! },
+        data: {
+          ...(input.emailNotifications !== undefined && {
+            emailNotifications: input.emailNotifications,
+          }),
+          ...(input.trendDropOptOut !== undefined && {
+            trendDropOptOut: input.trendDropOptOut,
+          }),
+        },
+      });
+      return { ok: true };
+    }),
+
   cancelAtPeriodEnd: clientProcedure.mutation(async ({ ctx }) => {
     const client = await ctx.prisma.client.findUnique({ where: { id: ctx.session.clientId! } });
     if (!client) throw new TRPCError({ code: "NOT_FOUND" });

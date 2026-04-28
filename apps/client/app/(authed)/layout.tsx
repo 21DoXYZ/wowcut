@@ -19,7 +19,7 @@ export default async function AuthedLayout({ children }: { children: React.React
             </div>
           </div>
         </div>
-        <SidebarNav />
+        <SidebarNav plan={current.plan} />
         <div className="p-5 border-t border-ink/6">
           <MonoLabel size="sm" className="text-ink/40 block mb-1">Signed in</MonoLabel>
           <div className="text-[13px] fw-340 tracking-[-0.14px] text-ink/65 truncate">

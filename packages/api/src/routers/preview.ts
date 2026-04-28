@@ -109,4 +109,39 @@ export const previewRouter = router({
         orderBy: { imageIndex: "asc" },
       });
     }),
+
+  gallery: publicProcedure
+    .input(z.object({ limit: z.number().int().min(1).max(60).default(24) }))
+    .query(async ({ ctx, input }) => {
+      const previews = await ctx.prisma.preview.findMany({
+        where: { status: "succeeded", moodboardImages: { not: {} as never } },
+        orderBy: { createdAt: "desc" },
+        take: input.limit * 3,
+        select: { id: true, moodboardImages: true, createdAt: true },
+      });
+
+      type ImgMeta = {
+        index: number;
+        stylePreset: string;
+        sceneHeadline: string;
+        url: string;
+        qcComposite: number;
+      };
+
+      const items: { previewId: string; image: ImgMeta }[] = [];
+      for (const p of previews) {
+        const imgs = (p.moodboardImages as ImgMeta[] | null) ?? [];
+        const best = imgs
+          .filter((img) => img.qcComposite >= 0.7)
+          .sort((a, b) => b.qcComposite - a.qcComposite)
+          .slice(0, 1);
+        for (const img of best) {
+          items.push({ previewId: p.id, image: img });
+          if (items.length >= input.limit) break;
+        }
+        if (items.length >= input.limit) break;
+      }
+
+      return items;
+    }),
 });

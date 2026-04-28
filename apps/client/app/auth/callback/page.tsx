@@ -14,6 +14,7 @@ export default function AuthCallbackPage() {
     );
 
     const code = searchParams.get("code");
+    const redirect = searchParams.get("redirect") ?? "/deliveries";
 
     if (code) {
       // PKCE flow: exchange code for session
@@ -21,7 +22,7 @@ export default function AuthCallbackPage() {
         if (error) {
           router.replace("/sign-in?error=auth_failed");
         } else {
-          router.replace("/deliveries");
+          router.replace(redirect);
         }
       });
       return;
@@ -32,7 +33,7 @@ export default function AuthCallbackPage() {
     setTimeout(() => {
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session) {
-          router.replace("/deliveries");
+          router.replace(redirect);
         } else {
           router.replace("/sign-in?error=auth_failed");
         }

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import { Button, Card, Input, Label, MonoLabel } from "@wowcut/ui/components";
 
@@ -11,6 +12,9 @@ function supabase() {
 }
 
 export default function SignInPage() {
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect") ?? "/deliveries";
+
   const [email, setEmail] = useState("");
   const [step, setStep] = useState<"email" | "sent">("email");
   const [loading, setLoading] = useState(false);
@@ -20,11 +24,12 @@ export default function SignInPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    const callbackUrl = `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirect)}`;
     const { error: err } = await supabase().auth.signInWithOtp({
       email: email.trim().toLowerCase(),
       options: {
         shouldCreateUser: false,
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: callbackUrl,
       },
     });
     setLoading(false);

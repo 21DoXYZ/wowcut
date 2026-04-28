@@ -261,26 +261,42 @@ export function MoodboardView({ previewId }: { previewId: string }) {
       </div>
 
       <Card variant="elevated" className="mt-12 p-7 md:p-8">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div>
-            <MonoLabel size="sm" className="text-ink/55 block mb-2">
-              {favorites.length > 0 ? `You favorited ${favorites.length}` : "Pick what you love"}
-            </MonoLabel>
-            <p className="text-[18px] fw-540 tracking-[-0.2px] leading-[1.3]">
-              {favorites.length > 0
-                ? "Week 1 will start here."
-                : "Favorites seed your production plan."}
-            </p>
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <MonoLabel size="sm" className="text-ink/55 block mb-2">
+                {favorites.length > 0 ? `You favorited ${favorites.length}` : "Pick what you love"}
+              </MonoLabel>
+              <p className="text-[18px] fw-540 tracking-[-0.2px] leading-[1.3]">
+                {favorites.length > 0
+                  ? "Save your picks and get started."
+                  : "Favorite scenes to seed your first week."}
+              </p>
+            </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-            <Link href={`/checkout?plan=week_pass&preview=${previewId}`} className="w-full md:w-auto">
-              <Button variant="outline" fullWidth>Try 1 week — $49</Button>
+
+          <Link href={`/sign-in?redirect=/try/moodboard/${previewId}`} className="w-full">
+            <Button variant="black" fullWidth>
+              Sign in to save your moodboard
+            </Button>
+          </Link>
+
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-ink/10" />
+            <span className="text-[12px] fw-330 text-ink/40">or go straight to checkout</span>
+            <div className="h-px flex-1 bg-ink/10" />
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link href={`/checkout?plan=week_pass&preview=${previewId}`} className="flex-1">
+              <Button variant="outline" fullWidth>Try 1 week - $49</Button>
             </Link>
-            <Link href={`/checkout?plan=base&preview=${previewId}`} className="w-full md:w-auto">
-              <Button variant="black" fullWidth>Start — $250 / mo</Button>
+            <Link href={`/checkout?plan=base&preview=${previewId}`} className="flex-1">
+              <Button variant="outline" fullWidth>Start - $250 / mo</Button>
             </Link>
           </div>
         </div>
+
         <div className="mt-5 pt-5 border-t border-ink/6 flex flex-wrap gap-x-6 gap-y-2 text-[12px] fw-340 tracking-[-0.14px] text-ink/55">
           <span>✓ Cancel anytime</span>
           <span>✓ First week refundable</span>

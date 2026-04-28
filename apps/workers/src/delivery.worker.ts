@@ -71,8 +71,8 @@ export const deliveryWorker = new Worker<DeliveryJobData>(
         },
       });
 
-      if (process.env.RESEND_API_KEY) {
-        await sendEmail({
+      if (process.env.RESEND_API_KEY && client.emailNotifications) {
+        const emailErr = await sendEmail({
           to: client.email,
           subject: `${targetWeek}: your ${units.length} new assets are ready`,
           react: DeliveryReadyEmail({
@@ -82,12 +82,18 @@ export const deliveryWorker = new Worker<DeliveryJobData>(
             unitCount: units.length,
             deliveryUrl: `${process.env.NEXT_PUBLIC_CLIENT_URL}/deliveries`,
           }),
-        }).catch((e) => console.error("[delivery] email failed", e));
+        }).then(() => null).catch((e: Error) => e);
 
-        await prisma.delivery.update({
-          where: { id: delivery.id },
-          data: { emailSentAt: new Date() },
-        });
+        if (emailErr) {
+          console.error("[delivery] email failed for", client.slug, emailErr.message);
+        } else {
+          await prisma.delivery.update({
+            where: { id: delivery.id },
+            data: { emailSentAt: new Date() },
+          });
+        }
+      } else if (!process.env.RESEND_API_KEY) {
+        console.warn("[delivery] RESEND_API_KEY not set — email skipped for", client.slug);
       }
     }
   },

@@ -8,6 +8,7 @@ export interface CurrentClientSession {
   brandName: string;
   slug: string;
   status: string;
+  plan: string;
 }
 
 const DEV_SESSION: CurrentClientSession = {
@@ -16,6 +17,7 @@ const DEV_SESSION: CurrentClientSession = {
   brandName: "Dev Brand",
   slug: "dev-wowcut",
   status: "active",
+  plan: "base",
 };
 
 export async function getCurrentClient(): Promise<CurrentClientSession | null> {
@@ -39,5 +41,6 @@ export async function getCurrentClient(): Promise<CurrentClientSession | null> {
     brandName: client.name,
     slug: client.slug,
     status: client.status,
+    plan: client.plan,
   };
 }

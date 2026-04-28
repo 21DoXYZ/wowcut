@@ -107,6 +107,10 @@ model Client {
 
   convertedFromPreviewId String? @unique
 
+  // Notification preferences
+  emailNotifications Boolean @default(true)
+  trendDropOptOut    Boolean @default(false)
+
   skus                 Sku[]
   contentPlanItems     ContentPlanItem[]
   deliveries           Delivery[]

@@ -52,7 +52,6 @@ export const insightsRouter = router({
   summary: clientProcedure.query(async ({ ctx }) => {
     const entries = await ctx.prisma.insightEntry.findMany({
       where: { clientId: ctx.session.clientId! },
-      include: { /* unit summary joined client-side for now */ },
       orderBy: { postedAt: "desc" },
       take: 200,
     });
@@ -69,5 +68,25 @@ export const insightsRouter = router({
     );
 
     return { entries: entries.length, totals };
+  }),
+
+  byChannel: clientProcedure.query(async ({ ctx }) => {
+    const entries = await ctx.prisma.insightEntry.findMany({
+      where: { clientId: ctx.session.clientId! },
+      select: { channel: true, likes: true, saves: true, comments: true, shares: true, views: true },
+    });
+
+    const map: Record<string, { likes: number; saves: number; comments: number; shares: number; views: number; count: number }> = {};
+    for (const e of entries) {
+      if (!map[e.channel]) map[e.channel] = { likes: 0, saves: 0, comments: 0, shares: 0, views: 0, count: 0 };
+      map[e.channel]!.likes += e.likes ?? 0;
+      map[e.channel]!.saves += e.saves ?? 0;
+      map[e.channel]!.comments += e.comments ?? 0;
+      map[e.channel]!.shares += e.shares ?? 0;
+      map[e.channel]!.views += e.views ?? 0;
+      map[e.channel]!.count += 1;
+    }
+
+    return Object.entries(map).map(([channel, stats]) => ({ channel, ...stats }));
   }),
 });
