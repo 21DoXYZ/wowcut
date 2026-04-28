@@ -29,7 +29,12 @@ export default function SignInPage() {
     });
     setLoading(false);
     if (err) {
-      setError("Email not found. Contact support if you have an account.");
+      const msg = err.message ?? "";
+      if (msg.toLowerCase().includes("rate") || msg.toLowerCase().includes("seconds")) {
+        setError("Too many requests. Wait 60 seconds and try again.");
+      } else {
+        setError("Email not found. Contact support if you have an account.");
+      }
       return;
     }
     setStep("sent");
