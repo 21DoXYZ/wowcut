@@ -2,14 +2,21 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@wowcut/ui/cn";
-import { PLAN_LIMITS } from "@wowcut/shared";
 
-type PlanId = keyof typeof PLAN_LIMITS;
+type PlanFeatures = { calendarEnabled: boolean; insightsEnabled: boolean; supportEnabled: boolean };
+
+const PLAN_FEATURES: Record<string, PlanFeatures> = {
+  week_pass: { calendarEnabled: false, insightsEnabled: false, supportEnabled: false },
+  base: { calendarEnabled: true, insightsEnabled: true, supportEnabled: true },
+  base_annual: { calendarEnabled: true, insightsEnabled: true, supportEnabled: true },
+  premium: { calendarEnabled: true, insightsEnabled: true, supportEnabled: true },
+  premium_annual: { calendarEnabled: true, insightsEnabled: true, supportEnabled: true },
+};
 
 interface NavItem {
   href: string;
   label: string;
-  planKey?: keyof (typeof PLAN_LIMITS)[PlanId];
+  planKey?: keyof PlanFeatures;
 }
 
 const NAV: NavItem[] = [
@@ -27,9 +34,9 @@ export function SidebarNav({ plan }: { plan?: string }) {
 
   function isEnabled(item: NavItem): boolean {
     if (!item.planKey) return true;
-    const limits = PLAN_LIMITS[plan as PlanId];
-    if (!limits) return true;
-    return !!(limits[item.planKey as keyof typeof limits]);
+    const features = plan ? PLAN_FEATURES[plan] : undefined;
+    if (!features) return true;
+    return features[item.planKey];
   }
 
   return (
