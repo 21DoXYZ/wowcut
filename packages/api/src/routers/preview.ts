@@ -110,6 +110,49 @@ export const previewRouter = router({
       });
     }),
 
+  claimPreview: publicProcedure
+    .input(
+      z.object({
+        previewId: z.string(),
+        email: z.string().email(),
+        brandName: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { previewId, email, brandName } = input;
+
+      // Upsert client — if they already have an account, just link; otherwise create pending
+      const base = email.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "-");
+      const slug = `${base}-${Date.now().toString(36)}`;
+
+      await ctx.prisma.client.upsert({
+        where: { email },
+        update: {},
+        create: {
+          email,
+          name: brandName || base,
+          slug,
+          status: "onboarding_confirm",
+          plan: "base",
+          toneOfVoice: "minimal",
+        },
+      });
+
+      // Link the preview so ops can see it
+      // Link the preview to the client record
+      const client = await ctx.prisma.client.findUnique({ where: { email }, select: { id: true } });
+      if (client) {
+        await ctx.prisma.preview.update({
+          where: { id: previewId },
+          data: { convertedClientId: client.id },
+        });
+      }
+
+      // Magic link is sent by the browser via signInWithOtp (PKCE flow).
+      // This mutation only handles the DB side.
+      return { ok: true };
+    }),
+
   gallery: publicProcedure
     .input(z.object({ limit: z.number().int().min(1).max(60).default(24) }))
     .query(async ({ ctx, input }) => {

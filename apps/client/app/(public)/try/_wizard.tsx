@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { createBrowserClient } from "@supabase/ssr";
 import {
   Button,
   Card,
@@ -14,6 +15,14 @@ import {
   FieldError,
 } from "@wowcut/ui/components";
 import { trpc } from "@/lib/trpc";
+
+function supabase() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { flowType: "pkce" } },
+  );
+}
 
 interface UploadedImage {
   uploadId: string;
@@ -108,10 +117,12 @@ export function TryWizard() {
   const [selectedStyles, setSelectedStyles] = useState<StylePreset[]>(["social_style", "editorial_hero"]);
   const [brandColor, setBrandColor] = useState<string>("#111111");
   const [brandName, setBrandName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const create = trpc.preview.create.useMutation();
+  const claim = trpc.preview.claimPreview.useMutation();
 
   async function handleProductFiles(files: File[]) {
     setError(null);
@@ -169,7 +180,19 @@ export function TryWizard() {
           selectedStyles,
         },
       });
-      router.push(`/try/moodboard/${result.id}`);
+
+      // Create Client record + send PKCE magic link from browser
+      if (email) {
+        await claim.mutateAsync({ previewId: result.id, email, brandName: brandName || undefined });
+        const callbackUrl = `${window.location.origin}/auth/callback?redirect=/deliveries`;
+        await supabase().auth.signInWithOtp({
+          email,
+          options: { shouldCreateUser: true, emailRedirectTo: callbackUrl },
+        });
+        router.push(`/try/moodboard/${result.id}?claimed=1&email=${encodeURIComponent(email)}`);
+      } else {
+        router.push(`/try/moodboard/${result.id}`);
+      }
     } catch (err) {
       setError((err as Error).message);
       setSubmitting(false);
@@ -179,9 +202,10 @@ export function TryWizard() {
   const TOTAL_STEPS = 4;
   const STEP_LABELS = ["Products", "References", "Styles", "Brand color"];
 
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const canContinue =
-    (step === 1 && products.length >= 1) ||
-    step === 2 || // references are optional
+    (step === 1 && products.length >= 1 && emailValid) ||
+    step === 2 ||
     (step === 3 && selectedStyles.length >= 1) ||
     (step === 4 && /^#[0-9A-Fa-f]{6}$/.test(brandColor));
 
@@ -225,14 +249,30 @@ export function TryWizard() {
               )}
             </div>
 
-            <div className="mt-6">
-              <Label htmlFor="brand" hint="optional">Brand name</Label>
-              <Input
-                id="brand"
-                value={brandName}
-                onChange={(e) => setBrandName(e.target.value)}
-                placeholder="Your brand"
-              />
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="brand" hint="optional">Brand name</Label>
+                <Input
+                  id="brand"
+                  value={brandName}
+                  onChange={(e) => setBrandName(e.target.value)}
+                  placeholder="Your brand"
+                />
+              </div>
+              <div>
+                <Label htmlFor="email">Your email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@brand.com"
+                />
+                <p className="mt-1 text-[12px] fw-330 text-ink/45">
+                  We send a sign-in link after generation.
+                </p>
+              </div>
             </div>
           </div>
         )}

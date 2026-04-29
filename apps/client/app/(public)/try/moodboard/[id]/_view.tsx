@@ -2,6 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button, Card, MonoLabel, Badge, Progress } from "@wowcut/ui/components";
 import { trpc } from "@/lib/trpc";
 
@@ -31,6 +32,10 @@ const LOADER_STAGES = [
 ];
 
 export function MoodboardView({ previewId }: { previewId: string }) {
+  const searchParams = useSearchParams();
+  const claimed = searchParams.get("claimed") === "1";
+  const claimedEmail = searchParams.get("email") ?? "";
+
   const status = trpc.preview.status.useQuery(
     { id: previewId },
     { refetchInterval: (data) => (data && data.state.data?.status === "succeeded" ? false : 3000) },
@@ -149,6 +154,20 @@ export function MoodboardView({ previewId }: { previewId: string }) {
 
   return (
     <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-12 md:py-16">
+      {claimed && (
+        <div className="mb-8 flex items-start gap-4 rounded-[14px] border border-ink/10 bg-ink/[0.03] p-5">
+          <div className="mt-0.5 h-8 w-8 rounded-full bg-ink flex items-center justify-center shrink-0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><polyline points="20 6 9 17 4 12" /></svg>
+          </div>
+          <div>
+            <p className="text-[15px] fw-540 tracking-[-0.2px] text-ink">Check your inbox</p>
+            <p className="mt-0.5 text-[14px] fw-330 text-ink/60">
+              We sent a sign-in link to <span className="fw-540 text-ink">{claimedEmail}</span>.
+              Click it to open your account once the moodboard is ready.
+            </p>
+          </div>
+        </div>
+      )}
       <div className="flex items-end justify-between gap-8 flex-wrap mb-10">
         <div>
           <MonoLabel>Your moodboard</MonoLabel>
