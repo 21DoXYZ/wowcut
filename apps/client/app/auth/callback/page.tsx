@@ -11,13 +11,14 @@ export default function AuthCallbackPage() {
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { auth: { flowType: "pkce" } },
     );
 
     const code = searchParams.get("code");
     const redirect = searchParams.get("redirect") ?? "/deliveries";
 
     if (code) {
-      // PKCE flow: exchange code for session
+      // PKCE flow: exchange code for session — sets SSR-compatible chunked cookies
       supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
         if (error) {
           router.replace("/sign-in?error=auth_failed");
@@ -28,17 +29,8 @@ export default function AuthCallbackPage() {
       return;
     }
 
-    // Implicit / token flow: createBrowserClient auto-processes URL hash,
-    // just need to wait a tick then read the session.
-    setTimeout(() => {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) {
-          router.replace(redirect);
-        } else {
-          router.replace("/sign-in?error=auth_failed");
-        }
-      });
-    }, 100);
+    // No code — auth failed or link already used
+    router.replace("/sign-in?error=no_code");
   }, [searchParams, router]);
 
   return (
