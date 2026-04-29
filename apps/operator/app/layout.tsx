@@ -6,6 +6,7 @@ import { TrpcProvider } from "./_providers/trpc-provider";
 
 export const metadata: Metadata = {
   title: "Wowcut Operator OS",
+  icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
