@@ -122,7 +122,7 @@ export const previewRouter = router({
       const { previewId, email, brandName } = input;
 
       // Upsert client — if they already have an account, just link; otherwise create pending
-      const base = email.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "-");
+      const base = (email.split("@")[0] ?? "user").toLowerCase().replace(/[^a-z0-9]/g, "-");
       const slug = `${base}-${Date.now().toString(36)}`;
 
       await ctx.prisma.client.upsert({
