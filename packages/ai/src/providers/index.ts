@@ -25,7 +25,6 @@ export {
   generateGeminiImage,
   type GeminiImageCallInput,
   type GeminiImageCallResult,
-  type GeminiImageReference,
 } from "./gemini-image";
 export { ImagenProvider, generateImagen } from "./imagen";
 export {

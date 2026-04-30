@@ -1,21 +1,16 @@
 import { MODEL_COSTS_USD } from "@wowcut/shared";
 import type { GenerationJob, GenerationResult, Provider } from "./index";
 import type { GenerationModel } from "../prompts/presets";
-import { getVertex, getVertexImage } from "../vertex/client";
+import { getVertexImage } from "../vertex/client";
 import { VERTEX_MODELS } from "../vertex/models";
-
-export interface GeminiImageReference {
-  mediaType: "image/jpeg" | "image/png" | "image/webp";
-  data: string;
-}
 
 export interface GeminiImageCallInput {
   model: GenerationModel;
   prompt: string;
   negative?: string;
-  references: GeminiImageReference[];
   aspectRatio: string;
-  seed?: number;
+  productImageBase64?: string;
+  productImageMimeType?: string;
 }
 
 export interface GeminiImageCallResult {
@@ -25,9 +20,6 @@ export interface GeminiImageCallResult {
   costUsd: number;
   safetyRatings: unknown;
 }
-
-// Gemini model that supports image generation with image references via generateContent.
-const GEMINI_IMAGE_GEN_MODEL = "gemini-2.0-flash-preview-image-generation";
 
 /**
  * Parse a data URL (data:image/jpeg;base64,XXXX) into its parts.
@@ -41,55 +33,10 @@ function parseDataUrl(s: string): { mediaType: string; data: string } | null {
 }
 
 /**
- * Gemini generateContent path: pass the product image as a visual reference.
- * The model sees the actual product and generates a scene around it.
- */
-async function generateWithReference(
-  prompt: string,
-  reference: GeminiImageReference,
-): Promise<GeminiImageCallResult> {
-  // Must use Vertex AI Express client (vertexai: true) — the preview image gen
-  // model is only available on aiplatform.googleapis.com, not the Developer API.
-  const ai = getVertexImage();
-  const started = Date.now();
-
-  const fullPrompt =
-    "You are a professional product photographer. Generate a high-quality commercial product photography scene. " +
-    "The product shown in the reference image MUST appear as the primary subject — render it faithfully, preserving its exact shape, color, material, and details. " +
-    "Do NOT substitute with a different product.\n\n" +
-    prompt;
-
-  const response = await ai.models.generateContent({
-    model: GEMINI_IMAGE_GEN_MODEL,
-    contents: [
-      {
-        role: "user",
-        parts: [
-          { inlineData: { mimeType: reference.mediaType, data: reference.data } },
-          { text: fullPrompt },
-        ],
-      },
-    ],
-    config: {
-      responseModalities: ["IMAGE"],
-    },
-  });
-
-  const parts = response.candidates?.[0]?.content?.parts ?? [];
-  const imagePart = parts.find((p: { inlineData?: { data?: string; mimeType?: string } }) => p.inlineData?.data);
-  if (!imagePart?.inlineData?.data) throw new Error("Gemini returned no image");
-
-  return {
-    imageBase64: imagePart.inlineData.data,
-    mimeType: imagePart.inlineData.mimeType ?? "image/png",
-    latencyMs: Date.now() - started,
-    costUsd: 0.04,
-    safetyRatings: [],
-  };
-}
-
-/**
- * Text-only Imagen path: used when no reference image is available.
+ * Imagen 3 path via Vertex AI Express.
+ * Uses generateImages (text-to-image). When a product reference image is
+ * provided its base64 data is passed as a REFERENCE_TYPE_SUBJECT so Imagen
+ * can preserve product details. Falls back to text-only if the SDK rejects it.
  */
 export async function generateGeminiImage(
   input: GeminiImageCallInput,
@@ -106,14 +53,45 @@ export async function generateGeminiImage(
     : input.aspectRatio === "16:9" ? "16:9"
     : "1:1";
 
-  const response = await ai.models.generateImages({
-    model: VERTEX_MODELS.imageNative,
-    prompt,
-    config: {
-      numberOfImages: 1,
-      aspectRatio,
-    },
-  });
+  // Try subject-reference generation when we have the product image.
+  // Falls back to plain text-to-image if the API rejects the referenceImages param.
+  const tryWithRef = !!(input.productImageBase64 && input.productImageMimeType);
+
+  const makeRequest = (withRef: boolean) =>
+    (ai.models as unknown as {
+      generateImages: (opts: unknown) => Promise<{
+        generatedImages?: { image?: { imageBytes?: string } }[];
+      }>;
+    }).generateImages({
+      model: VERTEX_MODELS.imageNative,
+      prompt,
+      config: {
+        numberOfImages: 1,
+        aspectRatio,
+        ...(withRef && input.productImageBase64
+          ? {
+              referenceImages: [
+                {
+                  referenceType: "REFERENCE_TYPE_SUBJECT",
+                  referenceId: 0,
+                  referenceImage: { imageBytes: input.productImageBase64 },
+                },
+              ],
+            }
+          : {}),
+      },
+    });
+
+  let response: Awaited<ReturnType<typeof makeRequest>>;
+  try {
+    response = await makeRequest(tryWithRef);
+  } catch {
+    if (tryWithRef) {
+      response = await makeRequest(false);
+    } else {
+      throw new Error("Imagen returned no image");
+    }
+  }
 
   const img = response.generatedImages?.[0];
   if (!img?.image?.imageBytes) throw new Error("Imagen returned no image");
@@ -135,40 +113,32 @@ export class GeminiImageProvider implements Provider {
   async generate(job: GenerationJob): Promise<GenerationResult> {
     const started = Date.now();
 
+    // Extract product image from reference data URLs if available.
     const referenceUrls = job.compiled.referenceImages ?? [];
     const firstRef = referenceUrls[0];
-
-    let result: GeminiImageCallResult;
-
+    let productImageBase64: string | undefined;
+    let productImageMimeType: string | undefined;
     if (firstRef) {
-      // Try to parse as data URL first (preview worker passes base64 data URLs).
-      // Fall back to text-only Imagen if parsing fails.
       const parsed = parseDataUrl(firstRef);
-      if (parsed && (parsed.mediaType === "image/jpeg" || parsed.mediaType === "image/png" || parsed.mediaType === "image/webp")) {
-        result = await generateWithReference(job.compiled.prompt, {
-          mediaType: parsed.mediaType as "image/jpeg" | "image/png" | "image/webp",
-          data: parsed.data,
-        });
-      } else {
-        result = await generateGeminiImage({
-          model: job.model,
-          prompt: job.compiled.prompt,
-          negative: job.compiled.negative,
-          references: [],
-          aspectRatio: job.aspectRatio,
-          seed: job.compiled.params.seed as number | undefined,
-        });
+      if (
+        parsed &&
+        (parsed.mediaType === "image/jpeg" ||
+          parsed.mediaType === "image/png" ||
+          parsed.mediaType === "image/webp")
+      ) {
+        productImageBase64 = parsed.data;
+        productImageMimeType = parsed.mediaType;
       }
-    } else {
-      result = await generateGeminiImage({
-        model: job.model,
-        prompt: job.compiled.prompt,
-        negative: job.compiled.negative,
-        references: [],
-        aspectRatio: job.aspectRatio,
-        seed: job.compiled.params.seed as number | undefined,
-      });
     }
+
+    const result = await generateGeminiImage({
+      model: job.model,
+      prompt: job.compiled.prompt,
+      negative: job.compiled.negative,
+      aspectRatio: job.aspectRatio,
+      productImageBase64,
+      productImageMimeType,
+    });
 
     const outputUrl = `data:${result.mimeType};base64,${result.imageBase64}`;
     return {
