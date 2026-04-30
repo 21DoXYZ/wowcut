@@ -48,7 +48,9 @@ async function generateWithReference(
   prompt: string,
   reference: GeminiImageReference,
 ): Promise<GeminiImageCallResult> {
-  const ai = getVertex();
+  // Must use Vertex AI Express client (vertexai: true) — the preview image gen
+  // model is only available on aiplatform.googleapis.com, not the Developer API.
+  const ai = getVertexImage();
   const started = Date.now();
 
   const fullPrompt =

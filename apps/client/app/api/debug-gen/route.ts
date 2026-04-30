@@ -1,14 +1,17 @@
 import { NextResponse } from "next/server";
-import { getVertex } from "@wowcut/ai";
+import { getVertex, getVertexImage } from "@wowcut/ai";
 
 // Temporary debug route — remove after diagnosing generation failure
-export async function GET() {
+// ?path=vertex (default) or ?path=express
+export async function GET(req: Request) {
   const apiKey = process.env.VERTEX_API_KEY ?? process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: "VERTEX_API_KEY not set" }, { status: 500 });
   }
 
-  const ai = getVertex();
+  const { searchParams } = new URL(req.url);
+  const path = searchParams.get("path") ?? "vertex";
+  const ai = path === "express" ? getVertexImage() : getVertex();
 
   try {
     const response = await ai.models.generateContent({
@@ -33,6 +36,7 @@ export async function GET() {
     if (imagePart?.inlineData?.data) {
       return NextResponse.json({
         ok: true,
+        path,
         mimeType: imagePart.inlineData.mimeType,
         byteLength: imagePart.inlineData.data.length,
       });
@@ -40,6 +44,7 @@ export async function GET() {
 
     return NextResponse.json({
       ok: false,
+      path,
       error: "no image in response",
       text: textPart?.text ?? null,
       partsCount: parts.length,
@@ -47,7 +52,7 @@ export async function GET() {
     });
   } catch (err) {
     return NextResponse.json(
-      { ok: false, error: (err as Error).message },
+      { ok: false, path, error: (err as Error).message },
       { status: 500 },
     );
   }

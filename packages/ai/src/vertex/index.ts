@@ -1,4 +1,4 @@
-export { getVertex, type VertexImagePart } from "./client";
+export { getVertex, getVertexImage, type VertexImagePart } from "./client";
 export {
   VERTEX_MODELS,
   VERTEX_PRICING_USD,
