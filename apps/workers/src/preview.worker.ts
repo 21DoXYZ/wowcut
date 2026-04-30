@@ -195,12 +195,12 @@ export const previewWorker = new Worker<PreviewJobData>(
             .filter((r): r is PromiseFulfilledResult<{ url: string; base64: string; mimeType: string; seed: number; qcComposite: number; costUsd: number }> => r.status === "fulfilled")
             .map((r) => r.value);
 
-          seedResults
-            .filter((r): r is PromiseRejectedResult => r.status === "rejected")
-            .forEach((r, i) => console.error(`[preview] scene ${scene.id} seed ${i} failed`, r.reason));
+          const failures = seedResults.filter((r): r is PromiseRejectedResult => r.status === "rejected");
+          failures.forEach((r, i) => console.error(`[preview] scene ${scene.id} seed ${i} failed`, r.reason));
 
           if (candidates.length === 0) {
-            throw new Error(`All ${PREVIEW.seedsPerScene} seeds failed for scene ${scene.id}`);
+            const firstErr = (failures[0]?.reason as Error)?.message ?? "unknown";
+            throw new Error(`All ${PREVIEW.seedsPerScene} seeds failed for scene ${scene.id}: ${firstErr}`);
           }
 
           candidates.sort((a, b) => b.qcComposite - a.qcComposite);
