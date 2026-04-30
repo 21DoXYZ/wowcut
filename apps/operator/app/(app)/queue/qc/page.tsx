@@ -77,7 +77,7 @@ export default function QcQueuePage() {
                   >
                     <div className="aspect-square bg-ink/5 relative">
                       {g.outputUrl && (
-                        <Image src={g.outputUrl} alt="" fill className="object-cover" />
+                        <Image src={g.outputUrl} alt="" fill loading="eager" sizes="33vw" className="object-cover" />
                       )}
                     </div>
                     <div className="p-2 text-[12px] fw-340 text-ink/70">

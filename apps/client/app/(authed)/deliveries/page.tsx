@@ -50,6 +50,8 @@ export default function DeliveriesPage() {
                       src={unit.chosenGeneration.outputUrl}
                       alt={unit.sku?.name ?? ""}
                       fill
+                      loading="eager"
+                      sizes="(min-width: 768px) 33vw, 100vw"
                       className="object-cover"
                     />
                   )}

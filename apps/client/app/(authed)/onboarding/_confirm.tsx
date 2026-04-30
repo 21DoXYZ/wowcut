@@ -61,7 +61,7 @@ export function ConfirmOnboardingView() {
                 key={img.index}
                 className="aspect-square rounded-lg overflow-hidden border border-ink/10 relative"
               >
-                <Image src={img.url} alt={img.sceneHeadline} fill className="object-cover" />
+                <Image src={img.url} alt={img.sceneHeadline} fill loading="eager" sizes="(min-width: 768px) 20vw, 33vw" className="object-cover" />
               </div>
             ))}
           </div>

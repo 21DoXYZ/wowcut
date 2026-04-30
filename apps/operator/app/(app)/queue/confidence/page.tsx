@@ -41,7 +41,7 @@ export default function ConfidenceQueuePage() {
         {queue.data?.map((gen) => (
           <Card key={gen.id} className="p-5 flex flex-col md:flex-row gap-5">
             <div className="md:w-64 aspect-square bg-ink/5 rounded-lg relative overflow-hidden">
-              {gen.outputUrl && <Image src={gen.outputUrl} alt="" fill className="object-cover" />}
+              {gen.outputUrl && <Image src={gen.outputUrl} alt="" fill loading="eager" sizes="256px" className="object-cover" />}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap gap-2">

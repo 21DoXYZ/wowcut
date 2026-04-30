@@ -146,6 +146,10 @@ export const seedancePollWorker = new Worker<SeedancePollJobData>(
           errorMessage: result.error ?? "Seedance returned no video URL",
         },
       });
+      await prisma.contentPlanItem.updateMany({
+        where: { generations: { some: { id: generationId } }, status: "generating" },
+        data: { status: "failed" },
+      });
       return;
     }
 

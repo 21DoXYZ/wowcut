@@ -51,13 +51,14 @@ export default function GalleryPage() {
                   src={image.url}
                   alt={image.sceneHeadline}
                   fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                  loading="eager"
                   sizes="(max-width: 768px) 50vw, 25vw"
+                  className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                 />
               </div>
               <div className="p-3 flex items-center gap-2">
                 <MonoLabel size="sm">{STYLE_LABELS[image.stylePreset] ?? image.stylePreset}</MonoLabel>
-                {image.qcComposite >= 0.9 && (
+                {image.qcComposite >= 90 && (
                   <Badge tone="ok" size="sm">Top pick</Badge>
                 )}
               </div>

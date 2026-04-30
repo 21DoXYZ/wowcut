@@ -175,7 +175,7 @@ export const previewRouter = router({
       for (const p of previews) {
         const imgs = (p.moodboardImages as ImgMeta[] | null) ?? [];
         const best = imgs
-          .filter((img) => img.qcComposite >= 0.7)
+          .filter((img) => img.qcComposite >= 70)
           .sort((a, b) => b.qcComposite - a.qcComposite)
           .slice(0, 1);
         for (const img of best) {

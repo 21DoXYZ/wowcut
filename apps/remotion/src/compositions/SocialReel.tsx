@@ -114,7 +114,6 @@ export const SocialReel: React.FC<SocialReelProps> = ({
   brandColor,
 }) => {
   const frame = useCurrentFrame();
-  const { totalFrames } = useVideoConfig();
 
   const captionOpacity = interpolate(frame, [0, 20], [0, 1], {
     extrapolateRight: "clamp",

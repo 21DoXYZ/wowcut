@@ -55,6 +55,8 @@ export default function LibraryPage() {
                   src={item.unit.chosenGeneration.outputUrl}
                   alt={item.unit.sku?.name ?? ""}
                   fill
+                  loading="eager"
+                  sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
                   className="object-cover"
                 />
               )}

@@ -60,12 +60,12 @@ export default function AssemblyQueuePage() {
                       ? (
                         <span
                           className={
-                            Number(item.chosenGeneration.qcComposite) >= 0.7
+                            Number(item.chosenGeneration.qcComposite) >= 70
                               ? "text-green-600"
                               : "text-yellow-600"
                           }
                         >
-                          {(Number(item.chosenGeneration.qcComposite) * 100).toFixed(0)}%
+                          {Number(item.chosenGeneration.qcComposite).toFixed(1)}
                         </span>
                       )
                       : <span className="text-ink/30">-</span>}
