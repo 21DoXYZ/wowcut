@@ -60,14 +60,15 @@ export const deliveryWorker = new Worker<DeliveryJobData>(
         return "";
       });
 
+      const itemConnect = units.map((u) => ({ id: u.id }));
       const delivery = await prisma.delivery.upsert({
         where: { clientId_weekKey: { clientId: client.id, weekKey: targetWeek } },
-        update: { publishingPackUrl: csvUrl },
+        update: { publishingPackUrl: csvUrl, items: { connect: itemConnect } },
         create: {
           clientId: client.id,
           weekKey: targetWeek,
           publishingPackUrl: csvUrl,
-          items: { connect: units.map((u) => ({ id: u.id })) },
+          items: { connect: itemConnect },
         },
       });
 

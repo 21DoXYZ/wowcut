@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { weekKey } from "@wowcut/shared";
 import { router, operatorProcedure } from "../trpc";
 
 export const operatorPlanRouter = router({
@@ -10,7 +11,7 @@ export const operatorPlanRouter = router({
       for (let i = 0; i < input.weeksAhead; i++) {
         const d = new Date(now);
         d.setDate(d.getDate() + i * 7);
-        weekKeys.push(toWeekKey(d));
+        weekKeys.push(weekKey(d));
       }
 
       const [clients, items] = await Promise.all([
@@ -79,11 +80,3 @@ export const operatorPlanRouter = router({
   }),
 });
 
-function toWeekKey(date: Date): string {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-  return `${d.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
-}

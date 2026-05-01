@@ -1,18 +1,16 @@
 import { z } from "zod";
+import { weekKey } from "@wowcut/shared";
 import { router, operatorProcedure } from "../trpc";
 
 export const operatorDeliveryRouter = router({
   weekSummary: operatorProcedure
     .input(z.object({ weekKey: z.string().optional() }))
     .query(async ({ ctx, input }) => {
-      const weekKey =
-        input.weekKey ??
-        new Date().toISOString().slice(0, 10).replace(/-/g, "-W").slice(0, 8) +
-          getWeekNumber(new Date());
+      const wk = input.weekKey ?? weekKey();
 
       const [deliveries, unitsByStatus, activeClients] = await Promise.all([
         ctx.prisma.delivery.findMany({
-          where: { weekKey },
+          where: { weekKey: wk },
           include: {
             client: { select: { id: true, name: true, slug: true, plan: true } },
           },
@@ -20,7 +18,7 @@ export const operatorDeliveryRouter = router({
         }),
         ctx.prisma.contentPlanItem.groupBy({
           by: ["status"],
-          where: { weekKey },
+          where: { weekKey: wk },
           _count: { status: true },
         }),
         ctx.prisma.client.findMany({
@@ -32,7 +30,7 @@ export const operatorDeliveryRouter = router({
       const deliveredClientIds = new Set(deliveries.map((d) => d.clientId));
       const blockers = activeClients.filter((c) => !deliveredClientIds.has(c.id));
 
-      return { weekKey, deliveries, unitsByStatus, blockers };
+      return { weekKey: wk, deliveries, unitsByStatus, blockers };
     }),
 
   recentWeeks: operatorProcedure.query(async ({ ctx }) => {
@@ -64,14 +62,3 @@ export const operatorDeliveryRouter = router({
       return { items, delivery };
     }),
 });
-
-function getWeekNumber(date: Date): string {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return String(Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)).padStart(
-    2,
-    "0",
-  );
-}

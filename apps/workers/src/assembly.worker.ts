@@ -84,23 +84,30 @@ export const assemblyWorker = new Worker<AssemblyJobData>(
     const ext = mapping.kind === "still" ? "jpg" : "mp4";
     const primaryKey = R2Keys.assembly(unit.id, unit.format, ext);
 
-    const render = await renderComposition({
-      compositionId: mapping.compositionId,
-      inputProps: mapping.inputProps,
-      kind: mapping.kind,
-      outputKey: primaryKey,
-    });
-
     let deliveredUrl: string;
     try {
-      const body = await fs.readFile(render.filePath);
-      deliveredUrl = await uploadObject({
-        key: primaryKey,
-        body,
-        contentType: render.mimeType,
+      const render = await renderComposition({
+        compositionId: mapping.compositionId,
+        inputProps: mapping.inputProps,
+        kind: mapping.kind,
+        outputKey: primaryKey,
       });
-    } finally {
-      await fs.unlink(render.filePath).catch(() => {});
+      try {
+        const body = await fs.readFile(render.filePath);
+        deliveredUrl = await uploadObject({
+          key: primaryKey,
+          body,
+          contentType: render.mimeType,
+        });
+      } finally {
+        await fs.unlink(render.filePath).catch(() => {});
+      }
+    } catch (err) {
+      await prisma.contentPlanItem.update({
+        where: { id: unit.id },
+        data: { status: "failed" },
+      });
+      throw err;
     }
 
     await prisma.generation.update({
