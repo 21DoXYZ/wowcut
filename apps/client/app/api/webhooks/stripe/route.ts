@@ -38,7 +38,8 @@ export async function POST(req: Request) {
     const name = session.customer_details?.name ?? email ?? "New Client";
     if (!email) return NextResponse.json({ received: true });
 
-    const slug = slugify(name);
+    const base = slugify(name);
+    const slug = `${base}-${Date.now().toString(36)}`;
     const previewId = (session.metadata?.previewId as string | undefined) ?? null;
     const plan = planFromMetadata(session.metadata?.plan as string | undefined);
     const initialStatus: ClientStatus =
