@@ -3,8 +3,6 @@ import Link from "next/link";
 import { Card, MonoLabel, Badge } from "@wowcut/ui/components";
 import { trpc } from "@/lib/trpc";
 
-export const metadata = { title: "Generation queue" };
-
 const STATUS_TONE: Record<string, "ok" | "warn" | "ink" | "neutral"> = {
   planned: "neutral",
   generating: "warn",
