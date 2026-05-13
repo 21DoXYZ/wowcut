@@ -174,7 +174,7 @@ export const videoProjectRouter = router({
           projectId: input.projectId,
           approved: true,
           imageStatus: "done",
-          videoStatus: { not: "done" },
+          videoStatus: { in: ["pending", "failed"] },
         },
         orderBy: { index: "asc" },
       });

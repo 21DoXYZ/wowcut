@@ -169,6 +169,11 @@ export const seedancePollWorker = new Worker<SeedancePollJobData>(
       data: { status: "succeeded", outputUrl: url },
     });
 
+    await prisma.contentPlanItem.updateMany({
+      where: { generations: { some: { id: generationId } }, status: "generating" },
+      data: { status: "auto_qc" },
+    });
+
     await enqueueQc(generationId);
   },
   { connection: redis, concurrency: 5 },
