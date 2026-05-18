@@ -1,7 +1,7 @@
-import { router, adminProcedure } from "../trpc";
+import { router, adminProcedure, operatorProcedure } from "../trpc";
 
 export const operatorMetricsRouter = router({
-  overview: adminProcedure.query(async ({ ctx }) => {
+  overview: operatorProcedure.query(async ({ ctx }) => {
     const [totalClients, activeClients, totalUnits, deliveredUnits, previewsToday] = await Promise.all([
       ctx.prisma.client.count(),
       ctx.prisma.client.count({ where: { status: "active" } }),
@@ -24,7 +24,7 @@ export const operatorMetricsRouter = router({
     };
   }),
 
-  apiCostByDay: adminProcedure.query(async ({ ctx }) => {
+  apiCostByDay: operatorProcedure.query(async ({ ctx }) => {
     const rows = await ctx.prisma.generation.groupBy({
       by: ["model"],
       _sum: { costUsd: true },

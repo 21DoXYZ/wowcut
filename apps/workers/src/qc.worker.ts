@@ -3,7 +3,7 @@ import { QUEUE_NAMES, QC_THRESHOLDS_DEFAULT } from "@wowcut/shared";
 import { STYLE_PRESETS, runQc, type StylePresetId, type StyleProfile } from "@wowcut/ai";
 import { prisma } from "@wowcut/db";
 import { redis } from "./redis";
-import { assemblyQueue } from "./queues";
+import { enqueueAssembly } from "./queues";
 
 export interface QcJobData {
   generationId: string;
@@ -103,7 +103,7 @@ export const qcWorker = new Worker<QcJobData>(
           status: "ready",
         },
       });
-      await assemblyQueue.add("assembly", { unitId: generation.unit.id });
+      await enqueueAssembly(generation.unit.id);
     } else {
       await prisma.contentPlanItem.update({
         where: { id: generation.unit.id },
