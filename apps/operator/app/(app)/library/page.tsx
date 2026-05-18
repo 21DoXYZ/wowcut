@@ -48,7 +48,7 @@ export default function OperatorLibraryPage() {
               <Input
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                placeholder="Model A — editorial"
+                placeholder="Model A - editorial"
               />
             </div>
             <div>

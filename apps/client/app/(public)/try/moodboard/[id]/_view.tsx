@@ -67,7 +67,7 @@ export function MoodboardView({ previewId }: { previewId: string }) {
         <MonoLabel>Not found</MonoLabel>
         <h1 className="mt-3 brand-heading">We couldn&rsquo;t find that moodboard</h1>
         <p className="mt-3 text-[15px] fw-340 text-ink/70 leading-[1.5] max-w-[52ch]">
-          It may have expired, or the link is incorrect. Start a fresh preview — it takes 60-90 seconds.
+          It may have expired, or the link is incorrect. Start a fresh preview - it takes 60-90 seconds.
         </p>
         <div className="mt-8 flex gap-3">
           <Link href="/try"><Button variant="black">Start fresh preview</Button></Link>

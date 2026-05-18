@@ -122,7 +122,7 @@ export default function ClientWorkspacePage({ params }: { params: { id: string }
             <ul className="mt-4 space-y-2 text-body fw-340">
               <li>Health score: {client.data.healthScore}/100</li>
               <li>Weekly logins: {client.data.weeklyLoginCount}</li>
-              <li>Last login: {client.data.lastLoginAt?.toString() ?? "—"}</li>
+              <li>Last login: {client.data.lastLoginAt?.toString() ?? "-"}</li>
               <li>Recent brief updates: {client.data.briefUpdates.length}</li>
             </ul>
           </Card>

@@ -21,7 +21,7 @@ export default function LibraryPage() {
       <h1 className="mt-3 brand-subheading">Your asset archive</h1>
       {stats.data && (
         <p className="mt-2 text-body fw-330 text-ink/70">
-          {stats.data.total} assets — {stats.data.favorites} favorites
+          {stats.data.total} assets - {stats.data.favorites} favorites
         </p>
       )}
 

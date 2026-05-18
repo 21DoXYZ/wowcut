@@ -15,10 +15,10 @@ export default function DashboardPage() {
       <h1 className="mt-3 brand-heading">Today</h1>
 
       <div className="mt-10 grid gap-4 md:grid-cols-4">
-        <Stat label="Clients" value={metrics.data?.activeClients ?? "—"} />
-        <Stat label="MRR" value={metrics.data ? `$${metrics.data.mrr.toLocaleString()}` : "—"} />
-        <Stat label="Units delivered" value={metrics.data?.deliveredUnits ?? "—"} />
-        <Stat label="Previews today" value={metrics.data?.previewsToday ?? "—"} />
+        <Stat label="Clients" value={metrics.data?.activeClients ?? "-"} />
+        <Stat label="MRR" value={metrics.data ? `$${metrics.data.mrr.toLocaleString()}` : "-"} />
+        <Stat label="Units delivered" value={metrics.data?.deliveredUnits ?? "-"} />
+        <Stat label="Previews today" value={metrics.data?.previewsToday ?? "-"} />
       </div>
 
       <div className="mt-10 grid gap-6 md:grid-cols-2">
@@ -33,7 +33,7 @@ export default function DashboardPage() {
                 <div>
                   <div className="fw-540 text-body">{c.name}</div>
                   <div className="text-[13px] fw-330 text-ink/60">
-                    Status: {c.status} • Last login: {c.lastLoginAt ? c.lastLoginAt.toString() : "—"}
+                    Status: {c.status} • Last login: {c.lastLoginAt ? c.lastLoginAt.toString() : "-"}
                   </div>
                 </div>
                 <Badge tone={c.healthScore < 40 ? "warn" : "neutral"}>{c.healthScore}</Badge>

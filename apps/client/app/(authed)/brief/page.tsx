@@ -52,7 +52,7 @@ export default function BriefPage() {
           <ul className="mt-4 space-y-2 text-[13px] fw-330 text-ink/70">
             {recent.data.map((u) => (
               <li key={u.id}>
-                {u.createdAt.toString()} — {JSON.stringify(u.changes)}
+                {u.createdAt.toString()} - {JSON.stringify(u.changes)}
               </li>
             ))}
           </ul>

@@ -21,7 +21,7 @@ export default function QcQueuePage() {
         <div className="text-right">
           <MonoLabel size="sm" className="text-ink/60">Auto-approve FP rate</MonoLabel>
           <div className="text-[32px] leading-none fw-540 mt-1">
-            {fp.data ? (fp.data.fpRate * 100).toFixed(1) : "—"}%
+            {fp.data ? (fp.data.fpRate * 100).toFixed(1) : "-"}%
           </div>
         </div>
       </div>
@@ -57,7 +57,7 @@ export default function QcQueuePage() {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <span className="fw-540 text-body">{unit.client.name}</span>{" "}
-                <span className="text-ink/60 text-body">— {unit.sku.name}</span>
+                <span className="text-ink/60 text-body">- {unit.sku.name}</span>
               </div>
               <div className="flex gap-2">
                 <Badge tone="neutral">{unit.stylePreset}</Badge>

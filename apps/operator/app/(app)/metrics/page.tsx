@@ -12,10 +12,10 @@ export default function MetricsPage() {
       <h1 className="mt-3 brand-heading">Business</h1>
 
       <div className="mt-8 grid gap-4 md:grid-cols-4">
-        <Stat label="Total clients" value={overview.data?.totalClients ?? "—"} />
-        <Stat label="Active clients" value={overview.data?.activeClients ?? "—"} />
-        <Stat label="MRR" value={overview.data ? `$${overview.data.mrr.toLocaleString()}` : "—"} />
-        <Stat label="Previews 24h" value={overview.data?.previewsToday ?? "—"} />
+        <Stat label="Total clients" value={overview.data?.totalClients ?? "-"} />
+        <Stat label="Active clients" value={overview.data?.activeClients ?? "-"} />
+        <Stat label="MRR" value={overview.data ? `$${overview.data.mrr.toLocaleString()}` : "-"} />
+        <Stat label="Previews 24h" value={overview.data?.previewsToday ?? "-"} />
       </div>
 
       <Card className="mt-10 p-6">

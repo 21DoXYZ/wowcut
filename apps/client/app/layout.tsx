@@ -6,9 +6,9 @@ import { PostHogProvider } from "./_providers/posthog-provider";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Wowcut — content on autopilot",
+  title: "Wowcut - content on autopilot",
   description:
-    "Templated content production for beauty & fashion DTC brands. 20 on-brand assets every month — $250.",
+    "Templated content production for beauty & fashion DTC brands. 20 on-brand assets every month - $250.",
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
 };
 

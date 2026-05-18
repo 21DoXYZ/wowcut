@@ -47,7 +47,7 @@ export function ConfirmOnboardingView() {
           </div>
           <div className="flex gap-2">
             <Badge tone="neutral">{onboarding.data?.plan ?? "base"}</Badge>
-            <Badge tone="neutral">{onboarding.data?.status ?? "—"}</Badge>
+            <Badge tone="neutral">{onboarding.data?.status ?? "-"}</Badge>
           </div>
         </div>
       </Card>

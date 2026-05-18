@@ -33,7 +33,7 @@ const PLANS: Plan[] = [
       "Social / Editorial / CGI styles",
     ],
     excluded: ["Motion video", "Retry requests", "Calendar, Insights, Support chat", "Trend Drops"],
-    cta: "Start trial — $49",
+    cta: "Start trial - $49",
     ctaHref: "/checkout?plan=week_pass",
     variant: "bordered",
   },
@@ -91,7 +91,7 @@ export default function PricingPage() {
         <MonoLabel>Pricing</MonoLabel>
         <h1 className="mt-3 brand-heading">Start small. Scale when it clicks.</h1>
         <p className="mt-4 text-[16px] fw-340 leading-[1.5] text-ink/70">
-          Annual prepay saves 15% — same output, two months free. Cancel anytime.
+          Annual prepay saves 15% - same output, two months free. Cancel anytime.
         </p>
       </div>
 
@@ -137,7 +137,7 @@ export default function PricingPage() {
                   {p.excluded.map((item) => (
                     <li key={item} className="flex items-start gap-2.5 text-[13px] fw-330 text-ink/40 leading-[1.4]">
                       <span aria-hidden className="mt-[5px] shrink-0 inline-flex items-center justify-center h-4 w-4 rounded-full bg-ink/8 text-ink/40 text-[10px]">
-                        —
+                        -
                       </span>
                       <span>{item}</span>
                     </li>
@@ -164,11 +164,11 @@ export default function PricingPage() {
         <div className="max-w-[48ch]">
           <MonoLabel size="sm" className="text-paper/50">Not ready yet?</MonoLabel>
           <p className="mt-2 text-[18px] fw-480 tracking-[-0.2px] text-paper leading-[1.35]">
-            Try a free moodboard first — see your brand in 9 directions.
+            Try a free moodboard first - see your brand in 9 directions.
           </p>
         </div>
         <Link href="/try">
-          <Button variant="white" size="md">See my brand — free</Button>
+          <Button variant="white" size="md">See my brand - free</Button>
         </Link>
       </div>
     </section>

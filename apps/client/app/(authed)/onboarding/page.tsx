@@ -1,7 +1,7 @@
 import { ConfirmOnboardingView } from "./_confirm";
 import { MonoLabel } from "@wowcut/ui/components";
 
-export const metadata = { title: "Confirm — Wowcut" };
+export const metadata = { title: "Confirm - Wowcut" };
 
 export default function OnboardingPage() {
   return (

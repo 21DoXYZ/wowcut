@@ -216,7 +216,7 @@ export function TryWizard() {
               Upload 1-3 product photos
             </h2>
             <p className="mt-2 text-[15px] fw-340 tracking-[-0.14px] text-ink/70 leading-[1.5] max-w-[52ch]">
-              Clean shots work best — plain backgrounds, good light. We&rsquo;ll handle the rest.
+              Clean shots work best - plain backgrounds, good light. We&rsquo;ll handle the rest.
             </p>
 
             <div className="mt-6 grid grid-cols-3 gap-3">
@@ -273,7 +273,7 @@ export function TryWizard() {
               Any reference images? <span className="text-ink/35 fw-340">(optional)</span>
             </h2>
             <p className="mt-2 text-[15px] fw-340 tracking-[-0.14px] text-ink/70 leading-[1.5] max-w-[52ch]">
-              Show us photos you like — a competitor, a vibe, a brand aesthetic. We use it to match the feel. Skip if you don't have any.
+              Show us photos you like - a competitor, a vibe, a brand aesthetic. We use it to match the feel. Skip if you don't have any.
             </p>
 
             <div className="mt-6">

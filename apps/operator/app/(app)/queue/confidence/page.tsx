@@ -26,7 +26,7 @@ export default function ConfidenceQueuePage() {
         <div className="text-right">
           <MonoLabel size="sm" className="text-ink/60">FP rate</MonoLabel>
           <div className="mt-1 text-[32px] fw-540">
-            {fpRate.data ? (fpRate.data.fpRate * 100).toFixed(1) : "—"}%
+            {fpRate.data ? (fpRate.data.fpRate * 100).toFixed(1) : "-"}%
           </div>
           <div className="text-[13px] fw-330 text-ink/50 mt-1">
             {fpRate.data?.total ?? 0} reviewed
@@ -48,7 +48,7 @@ export default function ConfidenceQueuePage() {
                 <Badge tone="neutral">{gen.unit?.client.name}</Badge>
                 <Badge tone="neutral">{gen.unit?.stylePreset}</Badge>
                 <Badge tone="ok">auto-approved</Badge>
-                <Badge tone="neutral">composite {gen.qcComposite?.toFixed(1) ?? "—"}</Badge>
+                <Badge tone="neutral">composite {gen.qcComposite?.toFixed(1) ?? "-"}</Badge>
               </div>
               <div className="mt-3 fw-540 text-body">{gen.unit?.sku.name}</div>
               <pre className="mt-3 text-[12px] fw-330 text-ink/60 overflow-auto max-h-40 bg-ink/5 p-3 rounded-lg">

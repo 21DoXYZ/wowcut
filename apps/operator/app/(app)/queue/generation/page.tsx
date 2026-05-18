@@ -81,7 +81,7 @@ export default function GenerationQueuePage() {
               <div key={g.id} className="flex items-start justify-between gap-2">
                 <div>
                   <div className="text-[13px] fw-480">
-                    {g.unit?.client.name ?? "-"} — {g.unit?.stylePreset}
+                    {g.unit?.client.name ?? "-"} - {g.unit?.stylePreset}
                   </div>
                   <div className="text-[12px] fw-330 text-ink/40 mt-0.5">
                     {g.model} · {g.latencyMs ? `${(g.latencyMs / 1000).toFixed(1)}s` : "?"} ·
