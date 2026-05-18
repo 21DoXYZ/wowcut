@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { Logo, MonoLabel } from "@wowcut/ui/components";
 import { getCurrentClient } from "@/lib/session";
 import { SidebarNav } from "./_sidebar-nav";
@@ -6,6 +7,13 @@ import { SidebarNav } from "./_sidebar-nav";
 export default async function AuthedLayout({ children }: { children: React.ReactNode }) {
   const current = await getCurrentClient();
   if (!current) redirect("/sign-in");
+
+  // Users who haven't confirmed onboarding yet must do so before accessing any other page.
+  const pathname = headers().get("x-pathname") ?? "";
+  const isOnboarding = pathname === "/onboarding" || pathname.startsWith("/onboarding/");
+  if (current.status === "onboarding_confirm" && !isOnboarding) {
+    redirect("/onboarding");
+  }
 
   return (
     <div className="min-h-screen bg-paper text-ink flex">

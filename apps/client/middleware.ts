@@ -32,6 +32,7 @@ export async function middleware(request: NextRequest) {
     // Auth refresh failed — pass through without session
   }
 
+  supabaseResponse.headers.set("x-pathname", request.nextUrl.pathname);
   return supabaseResponse;
 }
 
