@@ -1,6 +1,6 @@
-import { UserButton } from "@clerk/nextjs";
 import { Logo, MonoLabel } from "@wowcut/ui/components";
 import { OperatorSidebarNav } from "./_sidebar-nav";
+import { LogoutButton } from "./_logout-button";
 
 export default function OperatorLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -15,7 +15,7 @@ export default function OperatorLayout({ children }: { children: React.ReactNode
         <OperatorSidebarNav />
         <div className="px-5 py-4 border-t border-ink/6 flex items-center justify-between">
           <MonoLabel size="sm" className="text-ink/45">Account</MonoLabel>
-          <UserButton afterSignOutUrl="/sign-in" />
+          <LogoutButton />
         </div>
       </aside>
       <main className="flex-1 min-w-0">{children}</main>
