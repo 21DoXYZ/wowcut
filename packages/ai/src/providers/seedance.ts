@@ -179,8 +179,9 @@ export class SeedanceProvider implements Provider {
 
   async generate(job: GenerationJob): Promise<GenerationResult> {
     const started = Date.now();
+    const seedanceModel: SeedanceModel = job.model === "runway_gen3" ? "fast" : "pro";
     const op = await startSeedanceJob({
-      model: "pro",
+      model: seedanceModel,
       prompt: job.compiled.prompt,
       aspectRatio: job.aspectRatio,
     });

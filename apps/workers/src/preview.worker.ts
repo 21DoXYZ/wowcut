@@ -28,6 +28,17 @@ export interface PreviewJobData {
 async function fetchAsBase64(
   url: string,
 ): Promise<{ mediaType: "image/jpeg" | "image/png" | "image/webp"; data: string }> {
+  // Handle data URLs returned by dev upload fallback
+  if (url.startsWith("data:")) {
+    const [meta, data] = url.split(";base64,");
+    const mime = (meta ?? "data:image/jpeg").replace("data:", "");
+    const mediaType: "image/jpeg" | "image/png" | "image/webp" = mime.includes("png")
+      ? "image/png"
+      : mime.includes("webp")
+        ? "image/webp"
+        : "image/jpeg";
+    return { mediaType, data: data ?? "" };
+  }
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`);
   const contentType = res.headers.get("content-type") ?? "image/jpeg";

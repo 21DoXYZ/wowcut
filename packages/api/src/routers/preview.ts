@@ -138,18 +138,24 @@ export const previewRouter = router({
         },
       });
 
-      // Link the preview so ops can see it
-      // Link the preview to the client record
-      const client = await ctx.prisma.client.findUnique({ where: { email }, select: { id: true } });
+      const client = await ctx.prisma.client.findUnique({
+        where: { email },
+        select: { id: true, convertedFromPreviewId: true },
+      });
       if (client) {
         await ctx.prisma.preview.update({
           where: { id: previewId },
           data: { convertedClientId: client.id },
         });
+        // Link preview → client so onboarding.confirm can find it
+        if (!client.convertedFromPreviewId) {
+          await ctx.prisma.client.update({
+            where: { id: client.id },
+            data: { convertedFromPreviewId: previewId },
+          });
+        }
       }
 
-      // Magic link is sent by the browser via signInWithOtp (PKCE flow).
-      // This mutation only handles the DB side.
       return { ok: true };
     }),
 

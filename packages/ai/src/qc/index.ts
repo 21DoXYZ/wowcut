@@ -59,8 +59,13 @@ export async function runQc(input: RunQcInput): Promise<schemas.QcResult> {
     refEmbeddingsP,
   ]);
 
-  // 3. Product identity — CLIP cosine between generated and original product
-  const productIdentitySim = cosineSimilarity(generatedEmbedding, originalEmbedding);
+  // 3. Product identity — CLIP cosine between generated and original product.
+  // When embeddings are disabled (return []), skip the check by using a neutral
+  // passing score so the vision judge's productIdentityDelta drives the verdict instead.
+  const productIdentitySim =
+    generatedEmbedding.length === 0 || originalEmbedding.length === 0
+      ? 0.8
+      : cosineSimilarity(generatedEmbedding, originalEmbedding);
 
   // 4. Reference alignment — averaged cosine against user references
   const refSimilarities = refEmbeddings

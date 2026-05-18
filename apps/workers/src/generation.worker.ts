@@ -8,8 +8,23 @@ import {
   type StylePresetId,
 } from "@wowcut/ai";
 import { prisma } from "@wowcut/db";
+import { uploadObject, R2Keys } from "@wowcut/storage";
 import { redis } from "./redis";
 import { qcQueue, enqueueSeedancePoll } from "./queues";
+
+function parseDataUrl(dataUrl: string): { base64: string; mimeType: string } {
+  const [meta, base64] = dataUrl.split(";base64,");
+  const mimeType = (meta ?? "data:image/png").replace("data:", "");
+  return { base64: base64 ?? "", mimeType };
+}
+
+async function persistOutputUrl(generationId: string, outputUrl: string): Promise<string> {
+  if (!outputUrl.startsWith("data:")) return outputUrl;
+  const { base64, mimeType } = parseDataUrl(outputUrl);
+  const ext = mimeType.includes("png") ? "png" : mimeType.includes("mp4") ? "mp4" : "jpg";
+  const key = R2Keys.generation(generationId, ext as "jpg" | "mp4" | "png");
+  return uploadObject({ key, body: Buffer.from(base64, "base64"), contentType: mimeType });
+}
 
 export interface GenerationJobData {
   unitId: string;
@@ -97,11 +112,13 @@ export const generationWorker = new Worker<GenerationJobData>(
           return;
         }
 
+        const storedUrl = await persistOutputUrl(generation.id, result.outputUrl);
+
         await prisma.generation.update({
           where: { id: generation.id },
           data: {
             status: "succeeded",
-            outputUrl: result.outputUrl,
+            outputUrl: storedUrl,
             costUsd: result.costUsd,
             latencyMs: Date.now() - started,
             model: activeModel,

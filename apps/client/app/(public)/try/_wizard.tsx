@@ -72,16 +72,6 @@ const STYLES: {
     main: "/style-refs/cgi/2.png",
     thumbs: ["/style-refs/cgi/1.png", "/style-refs/cgi/4.png"],
   },
-  {
-    id: "fashion_campaign",
-    name: "With model",
-    tag: "Premium",
-    description: "Your product on a person. Aspirational, editorial art direction, brand-story feel.",
-    usedFor: "Fashion, beauty, lifestyle",
-    format: "4:5",
-    main: "/style-refs/fashion/1.png",
-    thumbs: ["/style-refs/fashion/2.png", "/style-refs/fashion/3.jpeg"],
-  },
 ];
 
 const PALETTE_PRESETS = [
