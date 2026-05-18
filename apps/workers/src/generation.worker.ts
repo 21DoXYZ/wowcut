@@ -10,7 +10,7 @@ import {
 import { prisma } from "@wowcut/db";
 import { uploadObject, R2Keys } from "@wowcut/storage";
 import { redis } from "./redis";
-import { qcQueue, enqueueSeedancePoll } from "./queues";
+import { enqueueQc, enqueueSeedancePoll } from "./queues";
 
 function parseDataUrl(dataUrl: string): { base64: string; mimeType: string } {
   const [meta, base64] = dataUrl.split(";base64,");
@@ -125,7 +125,7 @@ export const generationWorker = new Worker<GenerationJobData>(
           },
         });
 
-        await qcQueue.add("qc", { generationId: generation.id }, { attempts: 2 });
+        await enqueueQc(generation.id);
         await prisma.contentPlanItem.update({
           where: { id: unit.id },
           data: { status: "auto_qc" },
@@ -152,6 +152,16 @@ export const generationWorker = new Worker<GenerationJobData>(
   { connection: redis, concurrency: 10 },
 );
 
-generationWorker.on("failed", (job, err) => {
+generationWorker.on("failed", async (job, err) => {
   console.error("[generation] failed", job?.id, err.message);
+  // If the job crashes before the inner try/catch (e.g. unit not found in DB),
+  // the ContentPlanItem may be stuck in "planned" or "generating". Surface it as failed.
+  if (job?.data.unitId) {
+    await prisma.contentPlanItem
+      .updateMany({
+        where: { id: job.data.unitId, status: { in: ["planned", "generating"] } },
+        data: { status: "failed" },
+      })
+      .catch(() => {});
+  }
 });

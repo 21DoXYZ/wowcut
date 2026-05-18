@@ -133,6 +133,14 @@ export const assemblyWorker = new Worker<AssemblyJobData>(
   { connection: redis, concurrency: 2 },
 );
 
-assemblyWorker.on("failed", (job, err) =>
-  console.error("[assembly] failed", job?.id, err.message),
-);
+assemblyWorker.on("failed", async (job, err) => {
+  console.error("[assembly] failed", job?.id, err.message);
+  if (job?.data.unitId) {
+    await prisma.contentPlanItem
+      .updateMany({
+        where: { id: job.data.unitId, status: "assembling" },
+        data: { status: "failed" },
+      })
+      .catch(() => {});
+  }
+});
