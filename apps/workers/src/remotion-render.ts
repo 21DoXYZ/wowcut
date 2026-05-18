@@ -17,7 +17,10 @@ const ENTRY_POINT = path.resolve(__dirname, "../../remotion/src/index.ts");
 // Use system chromium if available (nixpacks installs it), otherwise Remotion downloads its own
 function getChromiumExecutablePath(): string | undefined {
   if (process.env.CHROMIUM_EXECUTABLE_PATH) return process.env.CHROMIUM_EXECUTABLE_PATH;
-  for (const candidate of ["chromium", "chromium-browser", "google-chrome-stable", "google-chrome"]) {
+
+  // Check well-known binary names in PATH
+  const names = ["chromium", "chromium-browser", "google-chrome-stable", "google-chrome"];
+  for (const candidate of names) {
     try {
       const p = execSync(`which ${candidate} 2>/dev/null`, { encoding: "utf8" }).trim();
       if (p) return p;
@@ -25,10 +28,37 @@ function getChromiumExecutablePath(): string | undefined {
       // not found
     }
   }
+
+  // Check common fixed paths (nixpacks/nix/apt)
+  const fixedPaths = [
+    "/usr/bin/chromium",
+    "/usr/bin/chromium-browser",
+    "/usr/bin/google-chrome-stable",
+    "/usr/bin/google-chrome",
+    "/snap/bin/chromium",
+    "/nix/var/nix/profiles/default/bin/chromium",
+    "/run/current-system/sw/bin/chromium",
+  ];
+  for (const p of fixedPaths) {
+    try {
+      execSync(`test -x ${p}`, { stdio: "ignore" });
+      return p;
+    } catch {
+      // not found
+    }
+  }
+
   return undefined;
 }
 
 const CHROMIUM_PATH = getChromiumExecutablePath();
+
+console.log("[remotion] chromium path:", CHROMIUM_PATH ?? "(will use Remotion bundled)");
+console.log("[remotion] entry point:", ENTRY_POINT);
+
+export async function warmBundle(): Promise<void> {
+  await getBundleUrl();
+}
 
 async function getBundleUrl(): Promise<string> {
   if (cachedBundleUrl) return cachedBundleUrl;

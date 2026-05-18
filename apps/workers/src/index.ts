@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { warmBundle } from "./remotion-render";
 import { previewWorker } from "./preview.worker";
 import { generationWorker } from "./generation.worker";
 import { qcWorker } from "./qc.worker";
@@ -71,6 +72,9 @@ async function main() {
       w.on("completed", (job) => console.log(`[${name}] ✓`, job.id));
     }),
   );
+
+  // Pre-warm Remotion bundle in background so first video render doesn't cold-start
+  warmBundle().catch((err) => console.error("[remotion] pre-warm failed:", (err as Error).message));
 
   const shutdown = async (signal: string) => {
     console.log(`[workers] ${signal} — closing…`);
