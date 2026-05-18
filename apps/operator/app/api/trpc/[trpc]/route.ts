@@ -1,13 +1,14 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { operatorRouter, createContext } from "@wowcut/api/server";
-import { auth } from "@clerk/nextjs/server";
+import { cookies } from "next/headers";
 
 const handler = async (req: Request) => {
-  const { userId, sessionClaims } = auth();
-  const role = ((sessionClaims?.metadata as { role?: string } | undefined)?.role as
-    | "admin"
-    | "operator"
-    | undefined) ?? (userId ? "operator" : "public");
+  const session = cookies().get("ops_session")?.value;
+  const secret = process.env.OPERATOR_SECRET;
+
+  // Valid session → admin (single-operator tool, no role tiers needed)
+  // No OPERATOR_SECRET set → dev mode, grant admin
+  const authenticated = !secret || session === secret;
 
   return fetchRequestHandler({
     endpoint: "/api/trpc",
@@ -16,10 +17,7 @@ const handler = async (req: Request) => {
     createContext: () =>
       createContext({
         surface: "operator",
-        session: {
-          actorId: userId,
-          role,
-        },
+        session: { role: authenticated ? "admin" : "public" },
       }),
   });
 };
