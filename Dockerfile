@@ -16,7 +16,7 @@ RUN apt-get update -qq && apt-get install -y --no-install-recommends \
   libxfixes3 \
   libxrandr2 \
   libgbm1 \
-  libasound2t64 \
+  libasound2 \
   && rm -rf /var/lib/apt/lists/*
 
 RUN npm install -g pnpm@10
