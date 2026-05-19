@@ -1,20 +1,22 @@
 providers = ["node"]
 
 [phases.setup]
-nixPkgs = ["nodejs_22", "pnpm-10_x", "chromium", "ffmpeg", "nss", "nspr", "patchelf", "atk", "at-spi2-atk", "cups", "libdrm", "libxkbcommon", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXfixes", "xorg.libXrandr", "mesa", "alsa-lib", "pango", "cairo", "glib"]
+nixPkgs = ["nodejs_22", "pnpm-10_x", "ffmpeg"]
 
 [phases.install]
-cmds = ["cd ../.. && pnpm install --no-frozen-lockfile"]
+cmds = [
+  "apt-get update -qq && apt-get install -y --no-install-recommends libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2 libpango-1.0-0 libcairo2 libx11-6 libxext6 fonts-liberation 2>/dev/null || true",
+  "cd ../.. && pnpm install --no-frozen-lockfile"
+]
 
 [phases.build]
 cmds = [
   "cd ../.. && pnpm --filter @wowcut/db exec prisma generate",
-  "cd ../.. && pnpm --filter @wowcut/workers build",
-  "NIX_LIBS=$(find /nix/store -maxdepth 4 -name 'libnspr4.so' 2>/dev/null | head -1 | xargs dirname || echo '') && echo \"NIX_LIBS=$NIX_LIBS\" && if [ -n \"$NIX_LIBS\" ]; then echo \"export LD_LIBRARY_PATH=$(find /nix/store -maxdepth 4 \\( -name 'libnspr4.so' -o -name 'libnss3.so' -o -name 'libatk-1.0.so*' \\) -exec dirname {} \\; 2>/dev/null | sort -u | tr '\\n' ':')\\$LD_LIBRARY_PATH\" > /app/nix-libs.sh; fi"
+  "cd ../.. && pnpm --filter @wowcut/workers build"
 ]
 
 [variables]
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
 
 [start]
-cmd = "source /app/nix-libs.sh 2>/dev/null || true; cd ../.. && pnpm --filter @wowcut/workers start"
+cmd = "cd ../.. && pnpm --filter @wowcut/workers start"
