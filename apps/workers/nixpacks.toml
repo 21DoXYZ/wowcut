@@ -1,7 +1,7 @@
 providers = ["node"]
 
 [phases.setup]
-nixPkgs = ["nodejs_22", "pnpm-10_x", "ffmpeg", "chromium", "nss", "nspr"]
+nixPkgs = ["nodejs_22", "pnpm-10_x", "ffmpeg"]
 
 [variables]
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
