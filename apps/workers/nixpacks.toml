@@ -1,7 +1,7 @@
 providers = ["node"]
 
 [phases.setup]
-nixPkgs = ["nodejs_22", "pnpm-10_x", "chromium", "ffmpeg"]
+nixPkgs = ["nodejs_22", "pnpm-10_x", "chromium", "ffmpeg", "nss", "nspr", "atk", "at-spi2-atk", "cups", "libdrm", "libxkbcommon", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXfixes", "xorg.libXrandr", "mesa", "alsa-lib", "pango", "cairo", "glib"]
 
 [phases.install]
 cmds = ["cd ../.. && pnpm install --no-frozen-lockfile"]
@@ -14,6 +14,7 @@ cmds = [
 
 [variables]
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
+LD_LIBRARY_PATH = "/root/.nix-profile/lib"
 
 [start]
 cmd = "cd ../.. && pnpm --filter @wowcut/workers start"
