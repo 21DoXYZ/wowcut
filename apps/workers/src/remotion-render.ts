@@ -93,13 +93,15 @@ export async function renderComposition(
   const started = Date.now();
   const serveUrl = await getBundleUrl();
 
-  const puppeteerExecutable = CHROMIUM_PATH ? { executablePath: CHROMIUM_PATH } : undefined;
+  const browserExecutable = CHROMIUM_PATH ?? undefined;
+  const chromiumOptions = { disableWebSecurity: false, ignoreCertificateErrors: false, headless: true };
 
   const composition = await selectComposition({
     serveUrl,
     id: input.compositionId,
     inputProps: input.inputProps,
-    ...(puppeteerExecutable ? { puppeteerExecutable } : {}),
+    chromiumOptions,
+    ...(browserExecutable ? { browserExecutable } : {}),
   });
 
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wowcut-remotion-"));
@@ -114,7 +116,8 @@ export async function renderComposition(
       output: outputPath,
       imageFormat: "jpeg",
       jpegQuality: 88,
-      ...(puppeteerExecutable ? { puppeteerExecutable } : {}),
+      chromiumOptions,
+      ...(browserExecutable ? { browserExecutable } : {}),
     });
     return {
       filePath: outputPath,
@@ -133,7 +136,8 @@ export async function renderComposition(
     jpegQuality: 88,
     pixelFormat: "yuv420p",
     onProgress: input.onProgress,
-    ...(puppeteerExecutable ? { puppeteerExecutable } : {}),
+    chromiumOptions,
+    ...(browserExecutable ? { browserExecutable } : {}),
   });
 
   return {
