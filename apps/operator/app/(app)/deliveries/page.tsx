@@ -18,6 +18,14 @@ const STATUS_BADGE: Record<string, "ok" | "warn" | "neutral" | "ink"> = {
 export default function OperatorDeliveriesPage() {
   const recentWeeks = trpc.delivery.recentWeeks.useQuery();
   const [selectedWeek, setSelectedWeek] = useState<string | undefined>(undefined);
+  const [deliveryMsg, setDeliveryMsg] = useState<string | null>(null);
+  const runDelivery = trpc.delivery.runDelivery.useMutation({
+    onSuccess: () => {
+      setDeliveryMsg("Delivery job queued - check Railway logs");
+      summary.refetch();
+    },
+    onError: (err) => setDeliveryMsg(`Error: ${err.message}`),
+  });
 
   const weekKey = selectedWeek ?? recentWeeks.data?.[0];
   const summary = trpc.delivery.weekSummary.useQuery(
@@ -35,20 +43,33 @@ export default function OperatorDeliveriesPage() {
           <MonoLabel>Deliveries</MonoLabel>
           <h1 className="mt-3 brand-heading">Weekly delivery control</h1>
         </div>
-        {recentWeeks.data && recentWeeks.data.length > 0 && (
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] fw-340 text-ink/50">Week:</span>
-            <select
-              className="text-[14px] fw-430 border border-ink/20 rounded-[8px] px-3 py-2 bg-paper"
-              value={weekKey ?? ""}
-              onChange={(e) => setSelectedWeek(e.target.value)}
-            >
-              {recentWeeks.data.map((wk) => (
-                <option key={wk} value={wk}>{wk}</option>
-              ))}
-            </select>
-          </div>
-        )}
+        <div className="flex items-center gap-3 flex-wrap">
+          {recentWeeks.data && recentWeeks.data.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-[13px] fw-340 text-ink/50">Week:</span>
+              <select
+                className="text-[14px] fw-430 border border-ink/20 rounded-[8px] px-3 py-2 bg-paper"
+                value={weekKey ?? ""}
+                onChange={(e) => setSelectedWeek(e.target.value)}
+              >
+                {recentWeeks.data.map((wk) => (
+                  <option key={wk} value={wk}>{wk}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          <Button
+            variant="black"
+            size="sm"
+            loading={runDelivery.isPending}
+            onClick={() => runDelivery.mutate({ weekKey })}
+          >
+            Run delivery now
+          </Button>
+          {deliveryMsg && (
+            <span className="text-[12px] fw-330 text-ink/50">{deliveryMsg}</span>
+          )}
+        </div>
       </div>
 
       {summary.isLoading && (

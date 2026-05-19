@@ -17,6 +17,11 @@ export default function ClientWorkspacePage({ params }: { params: { id: string }
     },
   });
   const [reply, setReply] = useState("");
+  const [batchMsg, setBatchMsg] = useState<string | null>(null);
+  const triggerBatch = trpc.clients.triggerBatch.useMutation({
+    onSuccess: (data) => setBatchMsg(`Queued ${data.enqueued} units for ${data.weekKey}`),
+    onError: (err) => setBatchMsg(`Error: ${err.message}`),
+  });
 
   if (!client.data) return <div className="p-10 text-ink/60 fw-330">Loading…</div>;
 
@@ -77,6 +82,25 @@ export default function ClientWorkspacePage({ params }: { params: { id: string }
             <p className="mt-2 text-body fw-330 text-ink/60">
               Recent deliveries: {client.data.deliveries.length}
             </p>
+            <div className="mt-6 flex gap-3 flex-wrap">
+              <Button
+                variant="black"
+                loading={triggerBatch.isPending}
+                onClick={() => triggerBatch.mutate({ id: params.id, kind: "pilot_minimum" })}
+              >
+                Trigger pilot generation
+              </Button>
+              <Button
+                variant="white"
+                loading={triggerBatch.isPending}
+                onClick={() => triggerBatch.mutate({ id: params.id, kind: "weekly_batch" })}
+              >
+                Trigger weekly batch
+              </Button>
+            </div>
+            {batchMsg && (
+              <p className="mt-3 text-[13px] fw-330 text-ink/60">{batchMsg}</p>
+            )}
           </Card>
         )}
         {tab === "messages" && (

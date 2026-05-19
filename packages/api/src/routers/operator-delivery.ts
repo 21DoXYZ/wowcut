@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { weekKey } from "@wowcut/shared";
+import { queues } from "@wowcut/queues";
 import { router, operatorProcedure } from "../trpc";
 
 export const operatorDeliveryRouter = router({
@@ -60,5 +61,17 @@ export const operatorDeliveryRouter = router({
         }),
       ]);
       return { items, delivery };
+    }),
+
+  runDelivery: operatorProcedure
+    .input(z.object({ clientId: z.string().optional(), weekKey: z.string().optional() }))
+    .mutation(async ({ input }) => {
+      const { deliveryQueue } = queues();
+      await deliveryQueue.add(
+        "manual-delivery",
+        { clientId: input.clientId, weekKey: input.weekKey },
+        { attempts: 2 },
+      );
+      return { ok: true };
     }),
 });
