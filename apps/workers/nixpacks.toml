@@ -1,18 +1,17 @@
 providers = ["node"]
 
 [phases.setup]
-nixPkgs = ["nodejs_22", "pnpm-10_x", "ffmpeg"]
+nixPkgs = ["nodejs_22", "pnpm-10_x", "ffmpeg", "nss", "nspr", "patchelf", "atk", "at-spi2-atk", "cups", "libdrm", "libxkbcommon", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXfixes", "xorg.libXrandr", "mesa", "alsa-lib", "pango", "cairo", "glib", "xorg.libX11", "xorg.libXext"]
 
 [phases.install]
-cmds = [
-  "apt-get update -qq && apt-get install -y --no-install-recommends libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2 libpango-1.0-0 libcairo2 libx11-6 libxext6 fonts-liberation 2>/dev/null || true",
-  "cd ../.. && pnpm install --no-frozen-lockfile"
-]
+cmds = ["cd ../.. && pnpm install --no-frozen-lockfile"]
 
 [phases.build]
 cmds = [
   "cd ../.. && pnpm --filter @wowcut/db exec prisma generate",
-  "cd ../.. && pnpm --filter @wowcut/workers build"
+  "cd ../.. && pnpm --filter @wowcut/workers build",
+  "cd ../.. && node -e \"require('@remotion/renderer').ensureBrowser()\" 2>&1 || npx --yes remotion browser ensure 2>&1 || true",
+  "SHELL_BIN=$(find /root/.nix-profile /nix/store -name 'chrome-headless-shell' -type f 2>/dev/null | head -1); NIX_RPATH=$(find /nix/store -name 'libnspr4.so' -exec dirname {} \\; 2>/dev/null | sort -u | head -5 | tr '\\n' ':' | sed 's/:$//'); echo \"chrome-headless-shell: $SHELL_BIN, rpath dirs: $NIX_RPATH\"; if [ -n \"$SHELL_BIN\" ] && [ -n \"$NIX_RPATH\" ]; then patchelf --add-rpath \"$NIX_RPATH\" \"$SHELL_BIN\" && echo 'patchelf done'; fi"
 ]
 
 [variables]
