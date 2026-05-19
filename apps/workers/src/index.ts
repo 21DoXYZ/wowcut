@@ -1,5 +1,7 @@
 import "dotenv/config";
 import { warmBundle } from "./remotion-render";
+import { enqueueAssembly } from "@wowcut/queues";
+import { prisma } from "@wowcut/db";
 import { previewWorker } from "./preview.worker";
 import { generationWorker } from "./generation.worker";
 import { qcWorker } from "./qc.worker";
@@ -75,6 +77,22 @@ async function main() {
 
   // Pre-warm Remotion bundle in background so first video render doesn't cold-start
   warmBundle().catch((err) => console.error("[remotion] pre-warm failed:", (err as Error).message));
+
+  // ONE-TIME: re-enqueue 5 failed assembly units from 2026-W21 test run
+  const requeueIds = [
+    "cmpc4d7xt0001y0eb2xwhdx0h",
+    "cmpc4d8nc0003y0ebjh04pa3e",
+    "cmpc4d9cp0005y0eb1en7vw7h",
+    "cmpc4da220007y0eb278b118e",
+    "cmpc4darf0009y0eb7yzv5p1m",
+  ];
+  Promise.all(
+    requeueIds.map(async (unitId) => {
+      await prisma.contentPlanItem.update({ where: { id: unitId }, data: { status: "ready" } });
+      await enqueueAssembly(unitId);
+      console.log("[workers] requeued assembly:", unitId);
+    }),
+  ).catch((err) => console.error("[workers] requeue error:", (err as Error).message));
 
   const shutdown = async (signal: string) => {
     console.log(`[workers] ${signal} — closing…`);
