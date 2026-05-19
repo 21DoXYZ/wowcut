@@ -4,5 +4,3 @@
 **/.turbo
 **/*.log
 .git
-apps/client
-apps/operator

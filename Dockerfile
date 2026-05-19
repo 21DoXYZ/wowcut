@@ -27,8 +27,7 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json ./
 COPY packages/ ./packages/
-COPY apps/workers/ ./apps/workers/
-COPY apps/remotion/ ./apps/remotion/
+COPY apps/ ./apps/
 
 RUN pnpm install --no-frozen-lockfile
 RUN pnpm --filter @wowcut/db exec prisma generate
