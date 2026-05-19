@@ -1,7 +1,7 @@
 providers = ["node"]
 
 [phases.setup]
-nixPkgs = ["nodejs_22", "pnpm-10_x", "chromium", "ffmpeg", "nss", "nspr", "atk", "at-spi2-atk", "cups", "libdrm", "libxkbcommon", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXfixes", "xorg.libXrandr", "mesa", "alsa-lib", "pango", "cairo", "glib"]
+nixPkgs = ["nodejs_22", "pnpm-10_x", "chromium", "ffmpeg", "nss", "nspr", "patchelf", "atk", "at-spi2-atk", "cups", "libdrm", "libxkbcommon", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXfixes", "xorg.libXrandr", "mesa", "alsa-lib", "pango", "cairo", "glib"]
 
 [phases.install]
 cmds = ["cd ../.. && pnpm install --no-frozen-lockfile"]
@@ -9,12 +9,12 @@ cmds = ["cd ../.. && pnpm install --no-frozen-lockfile"]
 [phases.build]
 cmds = [
   "cd ../.. && pnpm --filter @wowcut/db exec prisma generate",
-  "cd ../.. && pnpm --filter @wowcut/workers build"
+  "cd ../.. && pnpm --filter @wowcut/workers build",
+  "SHELL_BIN=$(find /root/.nix-profile/lib -name 'libnspr4.so' 2>/dev/null | head -1 | xargs dirname || echo '') && if [ -n \"$SHELL_BIN\" ]; then mkdir -p /usr/lib && for f in $(find /root/.nix-profile/lib -name '*.so*' 2>/dev/null); do ln -sf $f /usr/lib/$(basename $f) 2>/dev/null || true; done; fi"
 ]
 
 [variables]
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
-LD_LIBRARY_PATH = "/root/.nix-profile/lib"
 
 [start]
 cmd = "cd ../.. && pnpm --filter @wowcut/workers start"
