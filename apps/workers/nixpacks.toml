@@ -10,11 +10,11 @@ cmds = ["cd ../.. && pnpm install --no-frozen-lockfile"]
 cmds = [
   "cd ../.. && pnpm --filter @wowcut/db exec prisma generate",
   "cd ../.. && pnpm --filter @wowcut/workers build",
-  "SHELL_BIN=$(find /root/.nix-profile/lib -name 'libnspr4.so' 2>/dev/null | head -1 | xargs dirname || echo '') && if [ -n \"$SHELL_BIN\" ]; then mkdir -p /usr/lib && for f in $(find /root/.nix-profile/lib -name '*.so*' 2>/dev/null); do ln -sf $f /usr/lib/$(basename $f) 2>/dev/null || true; done; fi"
+  "NIX_LIBS=$(find /nix/store -maxdepth 4 -name 'libnspr4.so' 2>/dev/null | head -1 | xargs dirname || echo '') && echo \"NIX_LIBS=$NIX_LIBS\" && if [ -n \"$NIX_LIBS\" ]; then echo \"export LD_LIBRARY_PATH=$(find /nix/store -maxdepth 4 \\( -name 'libnspr4.so' -o -name 'libnss3.so' -o -name 'libatk-1.0.so*' \\) -exec dirname {} \\; 2>/dev/null | sort -u | tr '\\n' ':')\\$LD_LIBRARY_PATH\" > /app/nix-libs.sh; fi"
 ]
 
 [variables]
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
 
 [start]
-cmd = "cd ../.. && pnpm --filter @wowcut/workers start"
+cmd = "source /app/nix-libs.sh 2>/dev/null || true; cd ../.. && pnpm --filter @wowcut/workers start"
