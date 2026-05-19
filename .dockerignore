@@ -1,0 +1,8 @@
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/*.log
+.git
+apps/client
+apps/operator
