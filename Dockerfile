@@ -31,6 +31,5 @@ COPY apps/ ./apps/
 
 RUN pnpm install --no-frozen-lockfile
 RUN pnpm --filter @wowcut/db exec prisma generate
-RUN pnpm --filter @wowcut/workers build
 
 CMD ["pnpm", "--filter", "@wowcut/workers", "start"]
