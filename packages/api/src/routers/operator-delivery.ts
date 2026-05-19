@@ -35,13 +35,26 @@ export const operatorDeliveryRouter = router({
     }),
 
   recentWeeks: operatorProcedure.query(async ({ ctx }) => {
-    const rows = await ctx.prisma.delivery.findMany({
-      distinct: ["weekKey"],
-      orderBy: { weekKey: "desc" },
-      take: 12,
-      select: { weekKey: true },
-    });
-    return rows.map((r) => r.weekKey);
+    const [deliveryRows, planRows] = await Promise.all([
+      ctx.prisma.delivery.findMany({
+        distinct: ["weekKey"],
+        orderBy: { weekKey: "desc" },
+        take: 12,
+        select: { weekKey: true },
+      }),
+      ctx.prisma.contentPlanItem.findMany({
+        distinct: ["weekKey"],
+        orderBy: { weekKey: "desc" },
+        take: 12,
+        select: { weekKey: true },
+      }),
+    ]);
+    const seen = new Set<string>();
+    const merged: string[] = [];
+    for (const r of [...deliveryRows, ...planRows]) {
+      if (!seen.has(r.weekKey)) { seen.add(r.weekKey); merged.push(r.weekKey); }
+    }
+    return merged.sort((a, b) => b.localeCompare(a)).slice(0, 12);
   }),
 
   clientWeekDetail: operatorProcedure
