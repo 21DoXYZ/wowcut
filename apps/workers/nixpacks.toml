@@ -1,37 +1,7 @@
 providers = ["node"]
 
 [phases.setup]
-nixPkgs = ["nodejs_22", "pnpm-10_x"]
-aptPkgs = [
-  "ffmpeg",
-  "chromium",
-  "libnss3",
-  "libnspr4",
-  "libatk1.0-0",
-  "libatk-bridge2.0-0",
-  "libcups2",
-  "libdrm2",
-  "libxkbcommon0",
-  "libxcomposite1",
-  "libxdamage1",
-  "libxfixes3",
-  "libxrandr2",
-  "libgbm1",
-  "libasound2",
-  "libpangocairo-1.0-0",
-  "libx11-xcb1",
-  "libxcb-dri3-0"
-]
-
-[phases.install]
-cmds = ["cd ../.. && pnpm install --no-frozen-lockfile"]
-
-[phases.build]
-cmds = [
-  "cd ../.. && pnpm --filter @wowcut/db exec prisma generate",
-  "cd ../.. && pnpm --filter @wowcut/workers build",
-  "echo 'apt chromium libs installed:' && ldconfig -p | grep -E 'nspr|nss3' | head -5"
-]
+nixPkgs = ["nodejs_22", "pnpm-10_x", "ffmpeg", "chromium", "nss", "nspr"]
 
 [variables]
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"

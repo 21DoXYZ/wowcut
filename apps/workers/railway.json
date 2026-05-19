@@ -2,7 +2,7 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "cd ../.. && pnpm install --no-frozen-lockfile && pnpm --filter @wowcut/db exec prisma generate && pnpm --filter @wowcut/workers build"
+    "buildCommand": "cd ../.. && pnpm install --no-frozen-lockfile && pnpm --filter @wowcut/db exec prisma generate && pnpm --filter @wowcut/workers build && find /nix/store -maxdepth 4 -name '*.so*' 2>/dev/null | xargs -I{} dirname {} | sort -u > /etc/ld.so.conf.d/nix-chrome.conf && ldconfig && echo 'ldconfig ok, nspr:' && ldconfig -p | grep nspr | head -3"
   },
   "deploy": {
     "startCommand": "cd ../.. && pnpm --filter @wowcut/workers start",
