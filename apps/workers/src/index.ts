@@ -76,6 +76,11 @@ async function main() {
   // Pre-warm Remotion bundle in background so first video render doesn't cold-start
   warmBundle().catch((err) => console.error("[remotion] pre-warm failed:", (err as Error).message));
 
+  // ONE-TIME: trigger delivery for 2026-W21 assembled units
+  deliveryQueue.add("manual-delivery-2026-W21", { weekKey: "2026-W21" }, { attempts: 2 })
+    .then((job) => console.log("[workers] enqueued delivery for 2026-W21, job", job.id))
+    .catch((err) => console.error("[workers] delivery enqueue error:", (err as Error).message));
+
   const shutdown = async (signal: string) => {
     console.log(`[workers] ${signal} — closing…`);
     await Promise.all(workers.map(([, w]) => w.close()));
