@@ -88,6 +88,8 @@ async function main() {
       "cmpc4darf0009y0eb7yzv5p1m",
     ];
     for (const unitId of requeueIds) {
+      const item = await prisma.contentPlanItem.findUnique({ where: { id: unitId }, select: { status: true } });
+      if (!item || item.status !== "failed") continue;
       await prisma.contentPlanItem.update({ where: { id: unitId }, data: { status: "ready" } });
       await enqueueAssembly(unitId);
       console.log("[workers] requeued assembly:", unitId);
