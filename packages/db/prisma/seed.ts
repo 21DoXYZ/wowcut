@@ -128,6 +128,50 @@ async function main() {
     }
   }
 
+  console.log("Seeding test client…");
+  const testClient = await prisma.client.upsert({
+    where: { email: "test@wowcut.dev" },
+    update: {},
+    create: {
+      email: "test@wowcut.dev",
+      name: "Test Brand",
+      slug: "test-brand",
+      status: "active",
+      plan: "base",
+      selectedStyles: ["social_style", "editorial_hero", "cgi_concept"],
+      brandColors: ["#000000", "#ffffff"],
+      toneOfVoice: "minimal",
+      channels: ["instagram", "tiktok"],
+      healthScore: 90,
+    },
+  });
+
+  const skuCount = await prisma.sku.count({ where: { clientId: testClient.id } });
+  if (skuCount === 0) {
+    await prisma.sku.createMany({
+      data: [
+        {
+          clientId: testClient.id,
+          name: "Vitamin C Serum",
+          category: "serum",
+          shape: "bottle",
+          material: "glass",
+          primaryColor: "#f5e6c8",
+          imageUrl: "https://placehold.co/512x512?text=Vitamin+C+Serum",
+        },
+        {
+          clientId: testClient.id,
+          name: "Hydrating Toner",
+          category: "cream",
+          shape: "bottle",
+          material: "plastic",
+          primaryColor: "#c8e0f5",
+          imageUrl: "https://placehold.co/512x512?text=Hydrating+Toner",
+        },
+      ],
+    });
+  }
+
   console.log("Seed complete.");
 }
 
